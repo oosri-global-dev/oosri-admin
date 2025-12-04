@@ -1,0 +1,134 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+html {
+  box-sizing: border-box;
+  font-size: 14px;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+body {
+  background-color: var(--orrsiWhite);
+  -ms-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  color: var(--orrsiBlack);
+  scroll-behavior: smooth;
+  font-family: "Inter", sans-serif;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+::-webkit-scrollbar-button {
+  width: 0;
+  height: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+.ant-form {
+  width: 100%;
+}
+
+.ant-form-item {
+  margin: 0;
+  width: 100%;
+}
+
+td,
+th {
+  white-space: nowrap;
+}
+
+.ant-popover {
+  .ant-popover-inner {
+    padding: 8px;
+
+    .popover__custom {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
+.ant-switch-checked {
+  background-color: var(--oosriPrimary) !important;
+}
+
+form {
+  width: 100%;
+}
+
+.ant-notification-notice-message {
+  font-size: 1rem !important;
+  margin: 0 !important;
+  margin-left: 25px !important;
+}
+
+.ant-notification-notice-icon {
+  font-size: 16px !important;
+  padding-top: 1px;
+}
+
+.ant-notification-notice-icon {
+  height: fit-content;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.ant-spin-dot-item {
+  background-color: var(--oosriPrimary) !important;
+}
+
+.select__public__content {
+  display: flex;
+  flex-direction: row;
+
+  .ant-select-item-option-content {
+    display: flex;
+    flex-direction: row;
+    gap: 7px;
+    align-items: center;
+  }
+
+  img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.country__select {
+  .ant-select-selection-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+
+    img {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.ant-layout{
+  font-family: "Inter", sans-serif;
+}

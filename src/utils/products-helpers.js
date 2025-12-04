@@ -1,0 +1,38 @@
+export const productsTableData = [
+  {
+    key: "orderId",
+    sellerName: "Henry Collins",
+    productName: "Nokia A23",
+    productId: "P12345",
+    price: "$100",
+    country: "Nigeria",
+    instock: "50",
+  },
+  {
+    key: "orderId",
+    sellerName: "Henry Collins",
+    productName: "Nokia A23",
+    productId: "P12345",
+    price: "$100",
+    country: "Nigeria",
+    instock: "50",
+  },
+  {
+    key: "orderId",
+    sellerName: "Henry Collins",
+    productName: "Nokia A23",
+    productId: "P12345",
+    price: "$100",
+    country: "Nigeria",
+    instock: "50",
+  },
+  {
+    key: "orderId",
+    sellerName: "Henry Collins",
+    productName: "Nokia A23",
+    productId: "P12345",
+    price: "$100",
+    country: "Nigeria",
+    instock: "50",
+  },
+];
