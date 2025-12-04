@@ -4,6 +4,7 @@ import HeaderTextAndSub from '@/screens/Products/Product/simple-components/simpl
 import { formatISODateWithOrdinal } from '@/utils/format-date';
 
 export default function PersonalDetails({ personalDetails }) {
+  console.log(personalDetails, "PERSONAL DETAILS");
   return (
     <SellerWrapper>
       <FlexibleDiv
@@ -52,7 +53,7 @@ export default function PersonalDetails({ personalDetails }) {
                 content={personalDetails?.email}
               />
             </FlexibleDiv>
-            <HeaderTextAndSub title="Phone Number" content="+2347011046109" />
+            <HeaderTextAndSub title="Phone Number" content={personalDetails?.phoneNumber} />
           </FlexibleDiv>
           <FlexibleDiv
             className="personal__info__content"
@@ -65,12 +66,12 @@ export default function PersonalDetails({ personalDetails }) {
             <FlexibleDiv width="50%" justifyContent="flex-start">
               <HeaderTextAndSub
                 title="Physical Address"
-                content="123 Main Street, Suite 456 Anytown, CA 98765, United States"
+                content={personalDetails?.residentialAddress}
               />
             </FlexibleDiv>
             <HeaderTextAndSub
               title="Date of Birth"
-              content="14th, August 1995"
+              content={formatISODateWithOrdinal(personalDetails?.dob)}
             />
           </FlexibleDiv>
           <FlexibleDiv

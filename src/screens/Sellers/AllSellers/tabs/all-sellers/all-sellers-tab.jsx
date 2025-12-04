@@ -11,7 +11,7 @@ const PopoverContent = ({ obj, router }) => (
       height="30px"
       radius="5px"
       onClick={() => {
-        console(obj.id, "OBJ HERE")
+        console.log(obj.id, "OBJ HERE")
         router.push(`/seller/${obj && obj?.id}`);
       }}
     >

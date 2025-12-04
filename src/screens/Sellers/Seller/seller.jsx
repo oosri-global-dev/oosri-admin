@@ -12,6 +12,8 @@ export default function Seller({ sellerId }) {
   const { data, isLoading, error } = useSeller(sellerId);
   const sellerData = data?.data?.body || {};
 
+  console.log(sellerData, "SELLER DATA");
+
   const personalDetails =
     {
       firstName: sellerData?.firstName,
@@ -20,9 +22,12 @@ export default function Seller({ sellerId }) {
       country: sellerData?.country,
       phoneNumber: sellerData?.phoneNumber,
       joinDate: sellerData?.createdAt,
+      dob: sellerData?.personalBusinessAccount?.dateOfBirth,
       isVerified: sellerData?.isVerified,
       profilePicture: sellerData?.profilePicture,
       sellerDetails: sellerData?.createdAt,
+      residentialAddress: sellerData?.personalBusinessAccount?.residentialAddress,
+      countryIdCard: sellerData?.personalBusinessAccount?.countryIdentificationCard
     } || {};
 
 
@@ -33,14 +38,14 @@ export default function Seller({ sellerId }) {
         sellerData?.businessType === 'Personal'
           ? `${sellerData?.firstName} ${sellerData?.lastName} `
           : sellerData?.businessType === 'Corporate'
-          ? sellerData?.corporateBusinessAccount?.companyName
-          : '',
+            ? sellerData?.corporateBusinessAccount?.companyName
+            : '',
       accountData:
         sellerData?.businessType === 'Personal'
           ? sellerData?.personalBusinessAccount
           : sellerData?.businessType === 'Corporate'
-          ? sellerData?.corporateBusinessAccount
-          : '',
+            ? sellerData?.corporateBusinessAccount
+            : '',
     } || {};
 
   const bankDetails = data?.data?.body?.bankDetails || {};
@@ -70,8 +75,8 @@ export default function Seller({ sellerId }) {
             e === '1'
               ? setActiveTab('personal-details')
               : e === '2'
-              ? setActiveTab('business-details')
-              : setActiveTab('bank-details')
+                ? setActiveTab('business-details')
+                : setActiveTab('bank-details')
           }
         />
 
