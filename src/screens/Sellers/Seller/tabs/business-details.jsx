@@ -26,16 +26,16 @@ export default function BusinessDetails({ businessDetails }) {
         <FlexibleDiv flexDir="row" gap="30px" justifyContent="flex-start">
           <HeaderTextAndSub
             title="Business Registration Number"
-            content={businessDetails?.accountData?.companyRegNum}
+            content={businessDetails?.accountData?.companyRegNum || "-"}
           />
           <HeaderTextAndSub
             title="Business Address"
-            content={businessDetails?.accountData?.companyAddress}
+            content={businessDetails?.accountData?.companyAddress || "-"}
           />
         </FlexibleDiv>
         <HeaderTextAndSub
           title="Business Description"
-          content="MobileMaster is your trusted destination for all things mobile technology. With years of experience in the industry, we are dedicated to delivering top-notch products and services to meet your mobile needs.e offer a wide range of the latest smartphones, from top brands to budget-friendly options. Our knowledgeable staff can help you find the perfect phone to suit your needs."
+          content={businessDetails?.accountData?.companyDescription || "-"}
         />
         <FlexibleDiv
           className="gov__identification"
