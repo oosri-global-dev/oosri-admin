@@ -77,46 +77,45 @@ export default function AllCategoriesScreen() {
     //         message.error('Operation failed');
     //     }
     // };
-    const handleCreateOrUpdate = async (values) => {
-        let payload;
-        let isForm = false;
+   const handleCreateOrUpdate = async (values) => {
+    let payload;
+    let isForm = false;
 
-        // If user uploaded an image → use FormData
-        if (fileList.length > 0) {
-            payload = new FormData();
-            payload.append('name', values.name);
-            payload.append('description', values.description);
-            payload.append('image', fileList[0].originFileObj);
-            isForm = true;
+    // If user uploaded an image, use FormData
+    if (fileList.length > 0) {
+        payload = new FormData();
+        payload.append('name', values.name);
+        payload.append('description', values.description);
+        payload.append('image', fileList[0].originFileObj);
+        isForm = true;
+    } else {
+        // Otherwise send JSON
+        payload = {
+            name: values.name,
+            description: values.description,
+        };
+    }
+
+    try {
+        if (editingCategory) {
+            await updateCategory(editingCategory._id, payload, isForm);
+            message.success('Category updated successfully');
         } else {
-            // Otherwise backend expects JSON
-            payload = {
-                name: values.name,
-                description: values.description,
-            };
+            await createCategory(payload, isForm);
+            message.success('Category created successfully');
         }
 
-        try {
-            if (editingCategory) {
-                // Pass isForm so axios uses formInstance OR instance accordingly
-                await updateCategory(editingCategory._id, payload, isForm);
-                message.success('Category updated successfully');
-            } else {
-                // New category: if image provided, send FormData. Else? Up to backend.
-                await createCategory(payload, isForm);
-                message.success('Category created successfully');
-            }
+        setIsModalOpen(false);
+        form.resetFields();
+        setFileList([]);
+        setEditingCategory(null);
+        fetchCategories();
+    } catch (error) {
+        console.error(error);
+        message.error('Operation failed');
+    }
+};
 
-            setIsModalOpen(false);
-            form.resetFields();
-            setFileList([]);
-            setEditingCategory(null);
-            fetchCategories();
-        } catch (error) {
-            console.error(error);
-            message.error('Operation failed');
-        }
-    };
 
     const handleDelete = async (id) => {
         try {

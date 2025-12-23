@@ -16,7 +16,6 @@ export const createCategory = async (payload) => {
 };
 
 export const updateCategory = async (id, payload, isForm = false) => {
-
     const client = isForm ? formInstance : instance;
     return client.put(`/categories/${id}`, payload);
 };
