@@ -27,6 +27,7 @@ export default function CorporateBusiness() {
     formData.append("companyAddress", values?.companyAddress);
     formData.append("vatNumber", values?.vatNumber);
     formData.append("companyRegNum", values?.companyRegNum);
+    formData.append("phoneNumber", values?.phoneNumber);
     formData.append("paymentMethod", "Transfer");
 
     // Append bank details
@@ -149,6 +150,24 @@ export default function CorporateBusiness() {
             <TextField name="companyAddress" type="text" maxLength={100} />
           </Form.Item>
         </FlexibleDiv>
+      </FlexibleDiv>
+
+      <FlexibleDiv
+        flexDir="column"
+        alignItems="flex-start"
+        gap="5px"
+        width="100%"
+        className="single__input__box"
+      >
+        <label>Phone Number</label>
+        <Form.Item
+          name="phoneNumber"
+          rules={[
+            { required: true, message: "Please enter your phone number" },
+          ]}
+        >
+          <TextField name="phoneNumber" type="text" maxLength={20} />
+        </Form.Item>
       </FlexibleDiv>
       <FlexibleDiv
         flexDir="row"

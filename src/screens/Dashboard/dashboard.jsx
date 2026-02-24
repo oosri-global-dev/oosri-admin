@@ -215,7 +215,7 @@ export default function DashboardScreen() {
             </FlexibleDiv>
             <FlexibleDiv className="recent__sale__wrapper">
               {/* <OrderWrapper> */}
-              <OrdersTable dashboardTableColumns={orderTableColumns} />
+              <OrdersTable dashboardTableColumns={orderTableColumns()} />
               {/* </OrderWrapper> */}
             </FlexibleDiv>
           </FlexibleDiv>

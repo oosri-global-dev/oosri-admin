@@ -4,6 +4,7 @@ import { Reducer } from "./reducer";
 export const MainContext = createContext({
   user: {},
   showNoBusinessModal: false,
+  currency: 'NGN',
 });
 
 export const MainProvider = ({ children }) => {

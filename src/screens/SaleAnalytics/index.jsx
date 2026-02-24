@@ -3,7 +3,6 @@ import DashboardLayout from '@/components/layouts/DashboardLayout/dashboard-layo
 import { GoStack as StackIcon } from 'react-icons/go';
 import { IoBagOutline as BagIcon } from 'react-icons/io5';
 import { CiCreditCard1 as CardIcon } from 'react-icons/ci';
-import { orderTableColumns } from '@/utils/order-helpers';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { OrderWrapper } from '../Order/orders.styles';
 import { FlexibleDiv } from '@/components/lib/Box/styles';
@@ -109,131 +108,131 @@ export default function SaleAnalytics() {
       {isLoading ? (
         <CustomLoader />
       ) : (
-      
-          <SaleAnalyticsWrapper>
-            <FlexibleDiv className="summary__wrapper" justifyContent="start">
-              {salesBoxes.map((sgn, idx) => (
-                <FlexibleDiv className="single__summary__box" key={idx}>
-                  <div className="icon__wrapper">{sgn.icon}</div>
-                  <div className="summary__text">
-                    <h1>{sgn.value}</h1>
-                    <p className="label__text">{sgn.label}</p>
-                  </div>
-                </FlexibleDiv>
-              ))}
-            </FlexibleDiv>
-            {/* Filter Menus */}
+
+        <SaleAnalyticsWrapper>
+          <FlexibleDiv className="summary__wrapper" justifyContent="start">
+            {salesBoxes.map((sgn, idx) => (
+              <FlexibleDiv className="single__summary__box" key={idx}>
+                <div className="icon__wrapper">{sgn.icon}</div>
+                <div className="summary__text">
+                  <h1>{sgn.value}</h1>
+                  <p className="label__text">{sgn.label}</p>
+                </div>
+              </FlexibleDiv>
+            ))}
+          </FlexibleDiv>
+          {/* Filter Menus */}
+          <FlexibleDiv
+            justifyContent="end"
+            margin="80px 0px 0px 0px"
+            gap="15px"
+          >
+            {filters.map((sgn, idx) => (
+              <Button
+                backgroundColor={
+                  selectedFilter === sgn ? 'var(--oosriPrimary)' : '#F5F5F5'
+                }
+                hoverBg="var(--oosriPrimary)"
+                height="35px"
+                radius="20px"
+                key={idx}
+                color={
+                  selectedFilter === sgn ? 'var(--oosriWhite)' : '#757575'
+                }
+                onClick={() => setSelectedFilter(sgn)}
+              >
+                {sgn}
+              </Button>
+            ))}
+          </FlexibleDiv>
+          {/* Chart Section */}
+          <FlexibleDiv width="100%" height="300px" className="graph__box">
+            <SalesChart labels={salesLabels} data={salesData} />
+          </FlexibleDiv>
+          {/*Purchasing Reports */}
+          <FlexibleDiv
+            className="table__section"
+            display="flex"
+            flexDir="row"
+            justifyContent="space-between"
+            width="100%"
+            marginBottom="10%"
+          >
             <FlexibleDiv
-              justifyContent="end"
-              margin="80px 0px 0px 0px"
-              gap="15px"
+              flexDir="row"
+              width="100%"
+              justifyContent="space-between"
+              padding="0 30px"
+              gap="12px"
+              className="top__recent__box"
             >
-              {filters.map((sgn, idx) => (
-                <Button
-                  backgroundColor={
-                    selectedFilter === sgn ? 'var(--oosriPrimary)' : '#F5F5F5'
-                  }
-                  hoverBg="var(--oosriPrimary)"
-                  height="35px"
-                  radius="20px"
-                  key={idx}
-                  color={
-                    selectedFilter === sgn ? 'var(--oosriWhite)' : '#757575'
-                  }
-                  onClick={() => setSelectedFilter(sgn)}
-                >
-                  {sgn}
-                </Button>
-              ))}
+              <div>
+                <h1>Purchasing Report</h1>
+                <p>Generate sales record from product </p>
+              </div>
+              <Select
+                onChange={(value, option) => {
+                  console.log('Select onChange:', value, option);
+                  handleYearChange(option);
+                }}
+                options={options}
+                value={yearFilter}
+              />
             </FlexibleDiv>
-            {/* Chart Section */}
-            <FlexibleDiv width="100%" height="300px" className="graph__box">
-              <SalesChart labels={salesLabels} data={salesData} />
-            </FlexibleDiv>
-            {/*Purchasing Reports */}
             <FlexibleDiv
-              className="table__section"
               display="flex"
               flexDir="row"
               justifyContent="space-between"
               width="100%"
-              marginBottom="10%"
             >
               <FlexibleDiv
-                flexDir="row"
                 width="100%"
-                justifyContent="space-between"
-                padding="0 30px"
-                gap="12px"
-                className="top__recent__box"
-              >
-                <div>
-                  <h1>Purchasing Report</h1>
-                  <p>Generate sales record from product </p>
-                </div>
-                <Select
-                  onChange={(value, option) => {
-                    console.log('Select onChange:', value, option);
-                    handleYearChange(option);
-                  }}
-                  options={options}
-                  value={yearFilter}
-                />
-              </FlexibleDiv>
-              <FlexibleDiv
                 display="flex"
-                flexDir="row"
                 justifyContent="space-between"
-                width="100%"
+                flexDir="row"
+                padding="0 30px"
+                alignItems="start"
+                className="recent__sale__wrapper"
               >
                 <FlexibleDiv
-                  width="100%"
-                  display="flex"
-                  justifyContent="space-between"
-                  flexDir="row"
-                  padding="0 30px"
+                  justifyContent="start"
+                  flexDir="column"
                   alignItems="start"
-                  className="recent__sale__wrapper"
+                  width="50%"
+                  className="item__box1 item__box"
                 >
+                  <h2>MOST PURCHASED</h2>
                   <FlexibleDiv
+                    className="chart__box"
+                    padding="50px 50px 80px 0px"
                     justifyContent="start"
-                    flexDir="column"
-                    alignItems="start"
-                    width="50%"
-                    className="item__box1 item__box"
+                    flexWrap="noWrap"
+                    gap="24px"
+                    flexDir="row"
                   >
-                    <h2>MOST PURCHASED</h2>
                     <FlexibleDiv
-                      className="chart__box"
-                      padding="50px 50px 80px 0px"
-                      justifyContent="start"
+                      className="image__text"
+                      justifyContent="column"
                       flexWrap="noWrap"
-                      gap="24px"
                       flexDir="row"
                     >
+                      <img
+                        className="product__image"
+                        src={mostPurchased?.productImage[0]}
+                      />
                       <FlexibleDiv
-                        className="image__text"
-                        justifyContent="column"
-                        flexWrap="noWrap"
-                        flexDir="row"
+                        flexDir="column"
+                        justifyContent="start"
+                        alignItems="start"
                       >
-                        <img
-                          className="product__image"
-                          src={mostPurchased?.productImage[0]}
-                        />
-                        <FlexibleDiv
-                          flexDir="column"
-                          justifyContent="start"
-                          alignItems="start"
-                        >
-                          <h5>{mostPurchased?.productName}</h5>
-                          <p className="percent__increase">
-                            {mostPurchased?.quantitySold} sold
-                          </p>
-                        </FlexibleDiv>
+                        <h5>{mostPurchased?.productName}</h5>
+                        <p className="percent__increase">
+                          {mostPurchased?.quantitySold} sold
+                        </p>
                       </FlexibleDiv>
-                      {/* Chart */}
-                      {/* <FlexibleDiv width="50%">
+                    </FlexibleDiv>
+                    {/* Chart */}
+                    {/* <FlexibleDiv width="50%">
                         <PurchasingChart increasing={true} />
                         <FlexibleDiv
                           flexWrap="noWrap"
@@ -248,45 +247,45 @@ export default function SaleAnalytics() {
                           <p className="neutral">from last week</p>
                         </FlexibleDiv>
                       </FlexibleDiv> */}
-                    </FlexibleDiv>
                   </FlexibleDiv>
-                  {/*  */}
+                </FlexibleDiv>
+                {/*  */}
+                <FlexibleDiv
+                  justifyContent="start"
+                  flexDir="row"
+                  alignItems="start"
+                  width="fit-content"
+                  className="item__box2 item__box"
+                >
+                  <h2>LEAST PURCHASED</h2>
                   <FlexibleDiv
-                    justifyContent="start"
-                    flexDir="row"
-                    alignItems="start"
-                    width="fit-content"
-                    className="item__box2 item__box"
+                    className="chart__box"
+                    padding="50px 50px 80px 0px"
+                    flexWrap="noWrap"
                   >
-                    <h2>LEAST PURCHASED</h2>
                     <FlexibleDiv
-                      className="chart__box"
-                      padding="50px 50px 80px 0px"
+                      flexDir="row"
                       flexWrap="noWrap"
+                      justifyContent="start"
+                      className="image__text"
                     >
+                      <img
+                        className="product__image"
+                        src={leastPurchased?.productImage[0]}
+                      />
                       <FlexibleDiv
-                        flexDir="row"
-                        flexWrap="noWrap"
+                        flexDir="column"
                         justifyContent="start"
-                        className="image__text"
+                        alignItems="start"
                       >
-                        <img
-                          className="product__image"
-                          src={leastPurchased?.productImage[0]}
-                        />
-                        <FlexibleDiv
-                          flexDir="column"
-                          justifyContent="start"
-                          alignItems="start"
-                        >
-                          <h5>{leastPurchased?.productName}</h5>
-                          <p className="percent__increase">
-                            {leastPurchased?.quantitySold} sold
-                          </p>
-                        </FlexibleDiv>
+                        <h5>{leastPurchased?.productName}</h5>
+                        <p className="percent__increase">
+                          {leastPurchased?.quantitySold} sold
+                        </p>
                       </FlexibleDiv>
-                      {/* Chart */}
-                      {/* <FlexibleDiv width="50%">
+                    </FlexibleDiv>
+                    {/* Chart */}
+                    {/* <FlexibleDiv width="50%">
                         <PurchasingChart />
                         <FlexibleDiv
                           flexWrap="noWrap"
@@ -301,122 +300,122 @@ export default function SaleAnalytics() {
                           <p className="neutral">from last week</p>
                         </FlexibleDiv>
                       </FlexibleDiv> */}
-                    </FlexibleDiv>
                   </FlexibleDiv>
                 </FlexibleDiv>
               </FlexibleDiv>
             </FlexibleDiv>
+          </FlexibleDiv>
+          <FlexibleDiv
+            width="100%"
+            display="flex"
+            justifyContent="space-between"
+            flexDir="row"
+            padding="0 30px"
+            alignItems="start"
+            className="recent__sale__wrapper"
+          >
+            <FlexibleDiv
+              justifyContent="start"
+              flexDir="column"
+              alignItems="start"
+              width="fit-content"
+              className="item__box1 item__box"
+            >
+              <h2>TOP SELLER</h2>
+              <FlexibleDiv
+                className="chart__box"
+                padding="50px 50px 80px 0px"
+                justifyContent="start"
+                flexWrap="noWrap"
+                gap="24px"
+                flexDir="row"
+              >
+                <FlexibleDiv
+                  className="image__text"
+                  justifyContent="column"
+                  flexWrap="noWrap"
+                  flexDir="row"
+                >
+                  <img
+                    className="product__image"
+                    src={topSeller?.sellerImage}
+                  />
+                  <FlexibleDiv
+                    flexDir="column"
+                    justifyContent="start"
+                    alignItems="start"
+                  >
+                    <h5>{topSeller?.sellerName}</h5>
+                    <p className="percent__increase">
+                      {topSeller?.totalSold} sold
+                    </p>
+                  </FlexibleDiv>
+                </FlexibleDiv>
+                {/* Chart */}
+              </FlexibleDiv>
+            </FlexibleDiv>
+          </FlexibleDiv>
+          {/* Product Reports */}
+          <div className="product__report">
+            <h1>Product Report</h1>
+            <p>Generate sales record from product </p>
+          </div>
+          <FlexibleDiv
+            className="table__section"
+            justifyContent="space-around"
+          >
             <FlexibleDiv
               width="100%"
               display="flex"
-              justifyContent="space-between"
               flexDir="row"
+              justifyContent="space-between"
               padding="0 30px"
-              alignItems="start"
-              className="recent__sale__wrapper"
+              className="top__recent__box multi__select__box"
             >
+              <FlexibleDiv className="multi__select" width="35%">
+                {/* ujherjhhhhhhhhhhhhhhhhhhhhhru */}
+                <ProductCategorySelect
+                  value={selectedCategory}
+                  onChange={setSelectedCategory}
+                  allowClear={true}
+                />
+              </FlexibleDiv>
               <FlexibleDiv
-                justifyContent="start"
-                flexDir="column"
-                alignItems="start"
-                width="fit-content"
-                className="item__box1 item__box"
+                gap="15px"
+                justifyContent="end"
+                className="btn__group"
+                width="65%"
               >
-                <h2>TOP SELLER</h2>
-                <FlexibleDiv
-                  className="chart__box"
-                  padding="50px 50px 80px 0px"
-                  justifyContent="start"
-                  flexWrap="noWrap"
-                  gap="24px"
-                  flexDir="row"
-                >
-                  <FlexibleDiv
-                    className="image__text"
-                    justifyContent="column"
-                    flexWrap="noWrap"
-                    flexDir="row"
+                {periods.map((sgn, idx) => (
+                  <Button
+                    backgroundColor={
+                      selectedPeriod === sgn.value
+                        ? 'var(--oosriPrimary)'
+                        : '#F5F5F5'
+                    }
+                    hoverBg="var(--oosriPrimary)"
+                    height="35px"
+                    radius="20px"
+                    key={idx}
+                    color={
+                      selectedPeriod === sgn.value
+                        ? 'var(--oosriWhite)'
+                        : '#757575'
+                    }
+                    onClick={() => setSelectedPeriod(sgn.value)}
                   >
-                    <img
-                      className="product__image"
-                      src={topSeller?.sellerImage}
-                    />
-                    <FlexibleDiv
-                      flexDir="column"
-                      justifyContent="start"
-                      alignItems="start"
-                    >
-                      <h5>{topSeller?.sellerName}</h5>
-                      <p className="percent__increase">
-                        {topSeller?.totalSold} sold
-                      </p>
-                    </FlexibleDiv>
-                  </FlexibleDiv>
-                  {/* Chart */}
-                </FlexibleDiv>
+                    {sgn.label}
+                  </Button>
+                ))}
               </FlexibleDiv>
             </FlexibleDiv>
-            {/* Product Reports */}
-            <div className="product__report">
-              <h1>Product Report</h1>
-              <p>Generate sales record from product </p>
-            </div>
-            <FlexibleDiv
-              className="table__section"
-              justifyContent="space-around"
-            >
-              <FlexibleDiv
-                width="100%"
-                display="flex"
-                flexDir="row"
-                justifyContent="space-between"
-                padding="0 30px"
-                className="top__recent__box multi__select__box"
-              >
-                <FlexibleDiv className="multi__select" width="35%">
-                  {/* ujherjhhhhhhhhhhhhhhhhhhhhhru */}
-                  <ProductCategorySelect
-                    value={selectedCategory}
-                    onChange={setSelectedCategory}
-                    allowClear={true}
-                  />
-                </FlexibleDiv>
-                <FlexibleDiv
-                  gap="15px"
-                  justifyContent="end"
-                  className="btn__group"
-                  width="65%"
-                >
-                  {periods.map((sgn, idx) => (
-                    <Button
-                      backgroundColor={
-                        selectedPeriod === sgn.value
-                          ? 'var(--oosriPrimary)'
-                          : '#F5F5F5'
-                      }
-                      hoverBg="var(--oosriPrimary)"
-                      height="35px"
-                      radius="20px"
-                      key={idx}
-                      color={
-                        selectedPeriod === sgn.value
-                          ? 'var(--oosriWhite)'
-                          : '#757575'
-                      }
-                      onClick={() => setSelectedPeriod(sgn.value)}
-                    >
-                      {sgn.label}
-                    </Button>
-                  ))}
-                </FlexibleDiv>
-              </FlexibleDiv>
-              {/* Table Section */}
-              <TopPurchasedCategoriesTable
-                period={selectedPeriod}
-                category={selectedCategory}
-              />
-            </FlexibleDiv>
-          </SaleAnalyticsWrapper>
+            {/* Table Section */}
+            <TopPurchasedCategoriesTable
+              period={selectedPeriod}
+              category={selectedCategory}
+            />
+          </FlexibleDiv>
+        </SaleAnalyticsWrapper>
       )}
     </>
   );

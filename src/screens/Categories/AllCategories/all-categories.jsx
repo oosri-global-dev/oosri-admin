@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Table, Space, Avatar, Popover, message, Modal, Form, Input, Upload } from 'antd';
+import { Table, Space, Avatar, Popover, message, Modal, Form, Input, Upload, Select } from 'antd';
+
+const { Option } = Select;
 import { IoSearchOutline as SearchIcon } from 'react-icons/io5';
 import { HiOutlineEllipsisHorizontal as EllipsisIcon } from 'react-icons/hi2';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
@@ -8,6 +10,7 @@ import { FlexibleDiv } from '@/components/lib/Box/styles';
 import Button from '@/components/lib/Button';
 import TextField from '@/components/lib/TextField';
 import { getCategories, createCategory, updateCategory, deleteCategory, createSubcategory, getSubcategories, updateSubcategory } from '@/network/category';
+import { getAttributes } from '@/network/attribute';
 
 export default function AllCategoriesScreen() {
     const [categories, setCategories] = useState([]);
@@ -21,6 +24,7 @@ export default function AllCategoriesScreen() {
     const [form] = Form.useForm();
     const [subForm] = Form.useForm();
     const [fileList, setFileList] = useState([]);
+    const [globalAttributes, setGlobalAttributes] = useState([]);
 
     const fetchCategories = async () => {
         setLoading(true);
@@ -40,8 +44,20 @@ export default function AllCategoriesScreen() {
         }
     };
 
+    const fetchGlobalAttributes = async () => {
+        try {
+            const res = await getAttributes();
+            if (res.data.success) {
+                setGlobalAttributes(res.data.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch globals:', error);
+        }
+    };
+
     useEffect(() => {
         fetchCategories();
+        fetchGlobalAttributes();
     }, []);
 
     const handleSearchChange = (e) => {
@@ -77,44 +93,52 @@ export default function AllCategoriesScreen() {
     //         message.error('Operation failed');
     //     }
     // };
-   const handleCreateOrUpdate = async (values) => {
-    let payload;
-    let isForm = false;
+    const handleCreateOrUpdate = async (values) => {
+        let payload;
+        let isForm = false;
 
-    // If user uploaded an image, use FormData
-    if (fileList.length > 0) {
-        payload = new FormData();
-        payload.append('name', values.name);
-        payload.append('description', values.description);
-        payload.append('image', fileList[0].originFileObj);
-        isForm = true;
-    } else {
-        // Otherwise send JSON
-        payload = {
-            name: values.name,
-            description: values.description,
-        };
-    }
-
-    try {
-        if (editingCategory) {
-            await updateCategory(editingCategory._id, payload, isForm);
-            message.success('Category updated successfully');
+        // If user uploaded an image, use FormData
+        if (fileList.length > 0) {
+            payload = new FormData();
+            payload.append('name', values.name);
+            payload.append('description', values.description);
+            payload.append('image', fileList[0].originFileObj);
+            isForm = true;
         } else {
-            await createCategory(payload, isForm);
-            message.success('Category created successfully');
+            // Otherwise send JSON
+            payload = {
+                name: values.name,
+                description: values.description,
+            };
         }
 
-        setIsModalOpen(false);
-        form.resetFields();
-        setFileList([]);
-        setEditingCategory(null);
-        fetchCategories();
-    } catch (error) {
-        console.error(error);
-        message.error('Operation failed');
-    }
-};
+        try {
+            const payloadWithAttributes = isForm ? payload : { ...payload, attributes: values.attributes };
+            if (isForm) {
+                // Append attributes to FormData if it is multiform
+                if (values.attributes) {
+                    payload.append('attributes', JSON.stringify(values.attributes));
+                }
+            }
+
+            if (editingCategory) {
+                await updateCategory(editingCategory._id, payloadWithAttributes, isForm);
+                message.success('Category updated successfully');
+            } else {
+                await createCategory(payload, isForm);
+                message.success('Category created successfully');
+            }
+
+            setIsModalOpen(false);
+            form.resetFields();
+            setFileList([]);
+            setEditingCategory(null);
+            fetchCategories();
+        } catch (error) {
+            console.error(error);
+            message.error('Operation failed');
+        }
+    };
 
 
     const handleDelete = async (id) => {
@@ -162,6 +186,7 @@ export default function AllCategoriesScreen() {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
+            render: (text) => <span style={{ fontWeight: 600, color: '#262626' }}>{text}</span>,
         },
         {
             title: 'Description',
@@ -187,7 +212,15 @@ export default function AllCategoriesScreen() {
                                 width="100%"
                                 onClick={() => {
                                     setEditingCategory(record);
-                                    form.setFieldsValue({ name: record.name, description: record.description });
+                                    form.setFieldsValue({
+                                        name: record.name,
+                                        description: record.description,
+                                        attributes: record.attributes?.map(a => ({
+                                            attributeId: a.attributeId,
+                                            isRequired: a.isRequired,
+                                            isFilterable: a.isFilterable
+                                        })) || []
+                                    });
                                     setIsModalOpen(true);
                                 }}
                             >
@@ -224,19 +257,17 @@ export default function AllCategoriesScreen() {
         <AllCategoriesWrapper>
             <FlexibleDiv
                 flexDir="column"
+                alignItems="flex-start"
                 className="categories__table__section"
             >
                 <FlexibleDiv
                     flexDir="row"
+                    alignItems="center"
                     justifyContent="space-between"
                     className="search__body__section"
                     width="100%"
                 >
-                    <FlexibleDiv
-                        className="search__section"
-                        flexDir="row"
-                        flexWrap="nowrap"
-                    >
+                    <div className="search__section">
                         <SearchIcon size={18} color="#9E9E9E" />
                         <TextField
                             placeholder="Search categories"
@@ -244,7 +275,7 @@ export default function AllCategoriesScreen() {
                             onChange={handleSearchChange}
                             className="text__field__custom"
                         />
-                    </FlexibleDiv>
+                    </div>
                     <Button
                         onClick={() => {
                             setEditingCategory(null);
@@ -255,6 +286,7 @@ export default function AllCategoriesScreen() {
                         startIcon={<PlusOutlined />}
                         bg="var(--oosriPrimary)"
                         color="#fff"
+                        height="44px"
                     >
                         Add Category
                     </Button>
@@ -316,6 +348,67 @@ export default function AllCategoriesScreen() {
                             </Button>
                         </Upload>
                     </Form.Item>
+
+                    <h3 style={{ marginBottom: '16px' }}>Link Attributes</h3>
+                    <Form.List name="attributes">
+                        {(fields, { add, remove }) => (
+                            <>
+                                {fields.map(({ key, name, ...restField }) => (
+                                    <FlexibleDiv key={key} gap="12px" margin="0 0 16px 0" alignItems="flex-start" flexWrap="nowrap">
+                                        <Form.Item
+                                            {...restField}
+                                            name={[name, 'attributeId']}
+                                            label="Attribute"
+                                            rules={[{ required: true, message: 'Missing attribute' }]}
+                                            style={{ flex: 1, marginBottom: 0 }}
+                                        >
+                                            <Select placeholder="Select attribute" style={{ height: '40px', width: '100%' }}>
+                                                {globalAttributes.map(attr => (
+                                                    <Option key={attr._id} value={attr._id}>{attr.label}</Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                        <Form.Item
+                                            {...restField}
+                                            name={[name, 'isRequired']}
+                                            valuePropName="checked"
+                                            label="Required"
+                                            style={{ width: '100px', marginBottom: 0 }}
+                                        >
+                                            <Select style={{ height: '40px' }}>
+                                                <Option value={true}>Yes</Option>
+                                                <Option value={false}>No</Option>
+                                            </Select>
+                                        </Form.Item>
+                                        <Button
+                                            bg="transparent"
+                                            color="#FF4D4F"
+                                            onClick={() => remove(name)}
+                                            style={{ padding: '0 8px', marginTop: '30px', border: 'none' }}
+                                        >
+                                            Remove
+                                        </Button>
+                                    </FlexibleDiv>
+                                ))}
+                                <Form.Item>
+                                    <Button
+                                        onClick={() => add()}
+                                        bg="transparent"
+                                        border="1px dashed #D9D9D9"
+                                        color="#595959"
+                                        width="100%"
+                                        height="40px"
+                                        hoverBg="#F5F5F5"
+                                        hoverColor="#262626"
+                                        hoverBorderColor="#D9D9D9"
+                                    >
+                                        + Add Attribute Field
+                                    </Button>
+                                </Form.Item>
+                            </>
+                        )}
+                    </Form.List>
+
                     <Form.Item>
                         <Button
                             type="primary"

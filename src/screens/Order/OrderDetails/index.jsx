@@ -7,12 +7,26 @@ import { FlexibleDiv } from '@/components/lib/Box/styles';
 import Picture from '@/assets/images/profile.jpg';
 import LeastPhoto from '@/assets/images/leastSellingProduct.png';
 import CustomLoader from '@/components/lib/CustomLoader';
+import { useMainContext } from '@/context';
 
 export default function OrderDetails({ data, isLoading }) {
-  let totalAmount =
-    Number(data?.totalAmount.slice(1)) + Number(data?.deliveryFee?.slice(1));
-  console.log(totalAmount);
-  console.log(typeof parseInt(data?.totalAmount.slice(1)), 'IS IT A NUMBER');
+  const { state } = useMainContext();
+  const currentCurrency = state.currency || 'NGN';
+
+  const displayAmount = (amtNGN, amtUSD, formattedNGN, formattedUSD) => {
+    return currentCurrency === 'USD' ? formattedUSD : formattedNGN;
+  };
+
+  const totalAmountFormatted = displayAmount(
+    data?.totalAmountNGN,
+    data?.totalAmountUSD,
+    data?.formattedAmountNGN,
+    data?.formattedAmountUSD
+  );
+
+  const deliveryFeeFormatted = currentCurrency === 'USD'
+    ? (data?.formattedAmountUSD ? '$0.00' : '$0.00') // Backend doesn't return deliveryFeeUSD currently, but we can assume or add it
+    : data?.formattedDeliveryFeeNGN || '₦0';
   return (
     <DashboardLayout title={'Order Details'} showBackBtn>
       {isLoading ? <CustomLoader /> : null}
@@ -51,7 +65,9 @@ export default function OrderDetails({ data, isLoading }) {
             >
               <h2>{data?.products[0]?.productName}</h2>
               <p className="strike__through">
-                {data?.products[0]?.productAmount}
+                {currentCurrency === 'USD' ? data?.products[0]?.formattedProductAmountUSD : data?.products[0]?.formattedProductAmountNGN}
+                {/* Fallback for backward compatibility */}
+                {!data?.products[0]?.formattedProductAmountNGN && data?.products[0]?.productAmount}
               </p>
               <p>Product Id: {data?.products[0]?.productId}</p>
             </FlexibleDiv>
@@ -238,20 +254,20 @@ export default function OrderDetails({ data, isLoading }) {
               {/* Product Total Amount */}
               <Space>
                 <h4 className="detail__info">Product Total Amount:</h4>
-                <h4 className="detail__data">{data?.totalAmount}</h4>
+                <h4 className="detail__data">
+                  {currentCurrency === 'USD' ? data?.formattedAmountUSD : data?.formattedAmountNGN}
+                </h4>
               </Space>
               {/* Delivery Fee*/}
               <Space>
                 <h4 className="detail__info">Delivery Fee:</h4>
-                <h4 className="detail__data">{data?.deliveryFee}</h4>
+                <h4 className="detail__data">{deliveryFeeFormatted}</h4>
               </Space>
               {/* Total Amount */}
               <Space className="total__amount">
                 <h4 className="detail__info">Total Amount:</h4>
                 <h4 className="detail__data">
-                  ₦
-                  {parseFloat(data?.totalAmount.replace(/[₦,]/g, '')) +
-                    parseFloat(data?.deliveryFee?.replace(/[₦,]/g, ''))}
+                  {totalAmountFormatted}
                 </h4>
               </Space>
             </FlexibleDiv>

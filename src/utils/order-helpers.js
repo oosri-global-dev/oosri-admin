@@ -40,7 +40,7 @@ export const rowSelection = {
   }),
 };
 
-export const orderTableColumns = [
+export const orderTableColumns = (currency = 'NGN') => [
   {
     title: () => (
       <FlexibleDiv
@@ -114,7 +114,7 @@ export const orderTableColumns = [
         className="sort__icons"
         justifyContent="start"
       >
-        <p>Amount</p>
+        <p>Amount {currency === 'USD' ? '($)' : '(₦)'}</p>
         <SortSVG />
       </FlexibleDiv>
     ),
@@ -123,8 +123,8 @@ export const orderTableColumns = [
     sortIcon: ({ sortOrder }) => (
       <FlexibleDiv className="sort__icons"></FlexibleDiv>
     ),
-    render: (_) => <p>{_}</p>,
-    sorter: (a, b) => a.amount - b.amount,
+    render: (_, obj) => <p>{currency === 'USD' ? obj.formattedAmountUSD : obj.formattedAmountNGN}</p>,
+    sorter: (a, b) => a.totalAmountNGN - b.totalAmountNGN,
   },
   {
     title: () => (

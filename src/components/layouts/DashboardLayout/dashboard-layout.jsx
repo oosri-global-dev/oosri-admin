@@ -41,7 +41,9 @@ export default function DashboardLayout({
           ? '/categories'
           : pathname.includes('/order')
             ? '/order'
-            : pathname
+            : pathname.includes('/attributes')
+              ? '/attributes'
+              : pathname
   );
   const {
     dispatch,
@@ -79,6 +81,14 @@ export default function DashboardLayout({
       label: 'Sellers',
       onClick: () => {
         push('/sellers');
+      },
+    },
+    {
+      key: '/attributes',
+      icon: <StackIcon />,
+      label: 'Attributes',
+      onClick: () => {
+        push('/attributes');
       },
     },
     {

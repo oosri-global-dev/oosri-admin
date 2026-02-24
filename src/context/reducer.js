@@ -3,6 +3,7 @@ import {
   DRAFT_PICKS,
   NO_BUSINESS_MODAL,
   UPDATE_USER,
+  SET_CURRENCY,
 } from './types';
 
 export const Reducer = (state, { type, payload }) => {
@@ -19,6 +20,12 @@ export const Reducer = (state, { type, payload }) => {
       return {
         ...state,
         showNoBusinessModal: payload || false,
+      };
+
+    case SET_CURRENCY:
+      return {
+        ...state,
+        currency: payload || 'NGN',
       };
 
     default:

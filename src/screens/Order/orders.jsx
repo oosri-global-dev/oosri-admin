@@ -8,8 +8,12 @@ import Select from '@/components/lib/Select';
 import { Table } from 'antd';
 import { orderTableColumns } from '@/utils/order-helpers';
 import { useOrders } from '@/hooks/useOrders';
+import { useMainContext } from '@/context';
+import { SET_CURRENCY } from '@/context/types';
 
 export default function OrderScreen() {
+  const { state, dispatch } = useMainContext();
+  const currentCurrency = state.currency || 'NGN';
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
@@ -39,6 +43,14 @@ export default function OrderScreen() {
   console.log('ORDERS', data);
 
   const options = [{ value: 'This Year', label: 'This Year' }];
+  const currencyOptions = [
+    { value: 'NGN', label: 'NGN (₦)' },
+    { value: 'USD', label: 'USD ($)' },
+  ];
+
+  const handleCurrencyChange = (value) => {
+    dispatch({ type: SET_CURRENCY, payload: value });
+  };
 
   return (
     <OrderWrapper>
@@ -50,7 +62,15 @@ export default function OrderScreen() {
           value={searchTerm}
           placeholder="Search by product name"
         />
-        <Select options={options} defaultValue="This Year" />
+        <FlexibleDiv gap="12px">
+          <Select
+            options={currencyOptions}
+            value={currentCurrency}
+            onChange={handleCurrencyChange}
+            width="120px"
+          />
+          <Select options={options} defaultValue="This Year" />
+        </FlexibleDiv>
       </FlexibleDiv>
 
       <Table
@@ -60,7 +80,7 @@ export default function OrderScreen() {
         }}
         loading={isLoading}
         dataSource={data?.body?.orders || []}
-        columns={orderTableColumns}
+        columns={orderTableColumns(currentCurrency)}
         pagination={{
           current: currentPage || 1,
           pageSize: filters.limit,

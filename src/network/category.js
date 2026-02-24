@@ -10,8 +10,9 @@ export const getCategory = async (id) => {
     return data;
 };
 
-export const createCategory = async (payload) => {
-    const data = await formInstance.post('/categories', payload);
+export const createCategory = async (payload, isForm = true) => {
+    const client = isForm ? formInstance : instance;
+    const data = await client.post('/categories', payload);
     return data;
 };
 
