@@ -24,3 +24,10 @@ export const getOrder = async (orderId) => {
   console.log('ORDER DATA', data);
   return data;
 };
+
+export const updateOrderStatus = async (orderId, orderStatus) => {
+  const { data } = await instance.patch(`/admin/order/${orderId}/status`, {
+    orderStatus,
+  });
+  return data;
+};

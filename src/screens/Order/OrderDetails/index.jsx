@@ -1,17 +1,40 @@
 'use client';
 
 import DashboardLayout from '@/components/layouts/DashboardLayout/dashboard-layout';
-import { Space } from 'antd';
+import { Space, Select, message } from 'antd';
 import { OrderDetailsWrapper } from './index.styles';
 import { FlexibleDiv } from '@/components/lib/Box/styles';
 import Picture from '@/assets/images/profile.jpg';
 import LeastPhoto from '@/assets/images/leastSellingProduct.png';
 import CustomLoader from '@/components/lib/CustomLoader';
 import { useMainContext } from '@/context';
+import { useUpdateOrderStatus } from '@/hooks/useUpdateOrderStatus';
 
 export default function OrderDetails({ data, isLoading }) {
   const { state } = useMainContext();
   const currentCurrency = state.currency || 'NGN';
+
+  const orderId = data?.orderId;
+  const { mutate: changeStatus, isLoading: isUpdating } = useUpdateOrderStatus(orderId);
+
+  const handleStatusChange = (newStatus) => {
+    changeStatus(newStatus, {
+      onSuccess: () => {
+        message.success(`Order status updated to "${newStatus}" successfully`);
+      },
+      onError: (err) => {
+        message.error(err?.response?.data?.message || 'Failed to update order status. Please try again.');
+      },
+    });
+  };
+
+  const ORDER_STATUS_OPTIONS = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'processing', label: 'Processing' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'canceled', label: 'Canceled' },
+    { value: 'on-hold', label: 'On Hold' },
+  ];
 
   const displayAmount = (amtNGN, amtUSD, formattedNGN, formattedUSD) => {
     return currentCurrency === 'USD' ? formattedUSD : formattedNGN;
@@ -164,8 +187,16 @@ export default function OrderDetails({ data, isLoading }) {
               </Space>
               {/* Status */}
               <Space>
-                <h4 className="detail__info">Satus:</h4>
-                <h4 className="detail__data">{data?.orderStatus}</h4>
+                <h4 className="detail__info">Status:</h4>
+                <Select
+                  value={data?.orderStatus}
+                  onChange={handleStatusChange}
+                  loading={isUpdating}
+                  disabled={isUpdating}
+                  options={ORDER_STATUS_OPTIONS}
+                  style={{ minWidth: 140 }}
+                  aria-label="Order Status"
+                />
               </Space>
               {/* Order Date */}
               <Space>
