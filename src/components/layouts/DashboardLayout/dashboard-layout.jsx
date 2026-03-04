@@ -16,6 +16,8 @@ import { useRouter } from 'next/router';
 import Button from '@/components/lib/Button';
 import { FaWindowClose as CloseIcon } from 'react-icons/fa';
 import { GoStack as StackIcon, GoPeople } from 'react-icons/go';
+import { TbCurrencyDollar as FxIcon } from 'react-icons/tb';
+
 const { Header, Sider, Content } = Layout;
 import { BsArrowLeft as LeftArrow } from 'react-icons/bs';
 import { MainContext } from '@/context';
@@ -43,8 +45,11 @@ export default function DashboardLayout({
             ? '/order'
             : pathname.includes('/attributes')
               ? '/attributes'
-              : pathname
+              : pathname.includes('/fx-rate')
+                ? '/fx-rate'
+                : pathname
   );
+
   const {
     dispatch,
     state: { user, showNoBusinessModal },
@@ -105,6 +110,14 @@ export default function DashboardLayout({
       label: 'Sales Analytics',
       onClick: () => {
         push('/sales-analytics');
+      },
+    },
+    {
+      key: '/fx-rate',
+      icon: <FxIcon size={18} />,
+      label: 'Exchange Rate',
+      onClick: () => {
+        push('/fx-rate');
       },
     },
     {
