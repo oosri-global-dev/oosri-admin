@@ -49,20 +49,35 @@ export default function FxRateScreen() {
     }
 
     function handleSubmit() {
-        if (!validate()) return;
+        console.log('[FxRate] Submit clicked. Validating...', { rateInput, noteInput, parsedRate });
 
-        updateRate(
-            { usdToNgnRate: parsedRate, note: noteInput.trim() },
-            {
-                onSuccess: () => {
-                    notifySuccess(`Exchange rate updated: $1 = ₦${parsedRate.toLocaleString()}`);
-                },
-                onError: (err) => {
-                    const msg = err?.response?.data?.message || 'Failed to update exchange rate. Please try again.';
-                    notifyError(msg);
-                },
-            }
-        );
+        if (!validate()) {
+            console.warn('[FxRate] Validation failed:', validationError);
+            return;
+        }
+
+        console.log('[FxRate] Validation passed. Dispatching updateRate hook...');
+
+        try {
+            updateRate(
+                { usdToNgnRate: parsedRate, note: noteInput.trim() },
+                {
+                    onSuccess: (data) => {
+                        console.log('[FxRate] API Success:', data);
+                        notifySuccess(`Exchange rate updated: $1 = ₦${parsedRate.toLocaleString()}`);
+                    },
+                    onError: (err) => {
+                        console.error('[FxRate] API Error Caught by onError hook:', err);
+                        console.error('Error Response:', err?.response?.data);
+                        const msg = err?.response?.data?.message || 'Failed to update exchange rate. Please try again.';
+                        notifyError(msg);
+                    },
+                }
+            );
+        } catch (syncErr) {
+            console.error('[FxRate] Synchronous crash in handleSubmit:', syncErr);
+            notifyError('An unexpected error occurred before sending the request.');
+        }
     }
 
     if (isLoading) return <CustomLoader />;
@@ -178,7 +193,10 @@ export default function FxRateScreen() {
                         radius="10px"
                         width="180px"
                         disabled={isSaving}
-                        onClick={handleSubmit}
+                        onClick={(e) => {
+                            console.log('[FxRate] Raw Button Click Registered! isSaving:', isSaving);
+                            handleSubmit(e);
+                        }}
                     >
                         {isSaving ? 'Saving…' : 'Update Rate'}
                     </Button>
