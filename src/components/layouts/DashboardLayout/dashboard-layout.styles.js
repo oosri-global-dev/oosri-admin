@@ -1,7 +1,9 @@
 import { FlexibleDiv } from "@/components/lib/Box/styles";
 import styled from "styled-components";
 
-export const DBWrapper = styled(FlexibleDiv)`
+export const DBWrapper = styled(FlexibleDiv).withConfig({
+  shouldForwardProp: (prop) => prop !== 'openMenu',
+})`
   box-sizing: border-box;
 
   .layout__box {
@@ -128,7 +130,7 @@ export const DBWrapper = styled(FlexibleDiv)`
         transition: all 0.5s ease;
         display: ${({ openMenu }) => (openMenu ? "flex" : "flex")};
         transform: ${({ openMenu }) =>
-          openMenu ? "translateX(-100vw)" : "translateX(-10px)"};
+    openMenu ? "translateX(-100vw)" : "translateX(-10px)"};
         z-index: 10;
         padding: 10px;
         width: 100% !important;
@@ -187,7 +189,7 @@ export const DBWrapper = styled(FlexibleDiv)`
   }
 `;
 
-export const LogoutButton=styled.button`
+export const LogoutButton = styled.button`
   display:flex;
   align-items:center;
   margin-top:120px;

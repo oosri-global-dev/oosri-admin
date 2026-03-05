@@ -5,20 +5,21 @@ import Button from '@/components/lib/Button';
 import CustomLoader from '@/components/lib/CustomLoader';
 import { useFxRate } from '@/hooks/useFxRate';
 import { useSetFxRate } from '@/hooks/useSetFxRate';
+import useNotification from '@/hooks/useNotification';
 
 const MIN_RATE = 100;
 const MAX_RATE = 10000;
 
 export default function FxRateScreen() {
-    const { data: rateResponse, isLoading, isError } = useFxRate();
-    const { mutate: updateRate, isLoading: isSaving, isSuccess, isError: saveError, error: saveErrorMsg, reset } = useSetFxRate();
+    const { data: rateResponse, isLoading } = useFxRate();
+    const { mutate: updateRate, isPending: isSaving } = useSetFxRate();
+    const [notifySuccess, notifyError] = useNotification();
 
     const currentRate = rateResponse?.body || null;
 
     const [rateInput, setRateInput] = useState('');
     const [noteInput, setNoteInput] = useState('');
     const [validationError, setValidationError] = useState('');
-    const [successMsg, setSuccessMsg] = useState('');
 
     // Pre-fill the input with the current rate when it loads
     useEffect(() => {
@@ -26,18 +27,6 @@ export default function FxRateScreen() {
             setRateInput(String(currentRate.usdToNgnRate));
         }
     }, [currentRate?.usdToNgnRate]);
-
-    // Show success banner briefly, then auto-clear
-    useEffect(() => {
-        if (isSuccess) {
-            setSuccessMsg('Exchange rate updated successfully!');
-            const t = setTimeout(() => {
-                setSuccessMsg('');
-                reset();
-            }, 4000);
-            return () => clearTimeout(t);
-        }
-    }, [isSuccess, reset]);
 
     const parsedRate = parseInt(rateInput, 10);
     const previewValid = !isNaN(parsedRate) && parsedRate >= MIN_RATE && parsedRate <= MAX_RATE;
@@ -59,10 +48,21 @@ export default function FxRateScreen() {
         return true;
     }
 
-    function handleSubmit(e) {
-        e.preventDefault();
+    function handleSubmit() {
         if (!validate()) return;
-        updateRate({ usdToNgnRate: parsedRate, note: noteInput.trim() });
+
+        updateRate(
+            { usdToNgnRate: parsedRate, note: noteInput.trim() },
+            {
+                onSuccess: () => {
+                    notifySuccess(`Exchange rate updated: $1 = ₦${parsedRate.toLocaleString()}`);
+                },
+                onError: (err) => {
+                    const msg = err?.response?.data?.message || 'Failed to update exchange rate. Please try again.';
+                    notifyError(msg);
+                },
+            }
+        );
     }
 
     if (isLoading) return <CustomLoader />;
@@ -91,13 +91,16 @@ export default function FxRateScreen() {
                     <FlexibleDiv className="rate__meta">
                         {currentRate.note && (
                             <span className="meta__note" title={currentRate.note}>
-                                "{currentRate.note}"
+                                &quot;{currentRate.note}&quot;
                             </span>
                         )}
                         <span className="meta__item">
-                            Updated {currentRate.updatedAt
+                            Updated{' '}
+                            {currentRate.updatedAt
                                 ? new Date(currentRate.updatedAt).toLocaleDateString('en-NG', {
-                                    day: 'numeric', month: 'short', year: 'numeric',
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
                                 })
                                 : '—'}
                         </span>
@@ -113,20 +116,8 @@ export default function FxRateScreen() {
                 </FlexibleDiv>
             )}
 
-            {/* ── Success / error feedback ─────────────────────────────── */}
-            {successMsg && (
-                <FlexibleDiv className="feedback__banner success">
-                    ✅ {successMsg}
-                </FlexibleDiv>
-            )}
-            {saveError && (
-                <FlexibleDiv className="feedback__banner error">
-                    ❌ {saveErrorMsg?.response?.data?.message || 'Failed to update the rate. Please try again.'}
-                </FlexibleDiv>
-            )}
-
-            {/* ── Update form ──────────────────────────────────────────── */}
-            <FlexibleDiv className="update__card" as="form" onSubmit={handleSubmit}>
+            {/* ── Form ────────────────────────────────────────────────── */}
+            <FlexibleDiv className="update__card">
                 <h3>Update Exchange Rate</h3>
 
                 {/* Rate input */}
@@ -146,13 +137,16 @@ export default function FxRateScreen() {
                                 setRateInput(e.target.value);
                                 setValidationError('');
                             }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSubmit();
+                            }}
                         />
                     </div>
                     {validationError ? (
                         <p className="error__text">{validationError}</p>
                     ) : previewValid ? (
                         <p className="preview__text">
-                            Preview: $1 USD = ₦{parsedRate.toLocaleString()} &nbsp;·&nbsp;
+                            Preview: $1 USD = ₦{parsedRate.toLocaleString()}&nbsp;·&nbsp;
                             $100 = ₦{(parsedRate * 100).toLocaleString()}
                         </p>
                     ) : (
@@ -175,9 +169,8 @@ export default function FxRateScreen() {
                     <p className="helper__text">{noteInput.length}/200 characters</p>
                 </FlexibleDiv>
 
-                <FlexibleDiv className="submit__btn" justifyContent="flex-end">
+                <FlexibleDiv justifyContent="flex-end" style={{ width: '100%' }}>
                     <Button
-                        type="submit"
                         backgroundColor="var(--oosriPrimary)"
                         hoverBg="#d44070"
                         color="#fff"
@@ -185,6 +178,7 @@ export default function FxRateScreen() {
                         radius="10px"
                         width="180px"
                         disabled={isSaving}
+                        onClick={handleSubmit}
                     >
                         {isSaving ? 'Saving…' : 'Update Rate'}
                     </Button>

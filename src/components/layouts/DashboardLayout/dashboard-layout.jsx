@@ -52,8 +52,8 @@ export default function DashboardLayout({
 
   const {
     dispatch,
-    state: { user, showNoBusinessModal },
-  } = useContext(MainContext);
+    state: { user, showNoBusinessModal } = {},
+  } = useContext(MainContext) || {};
 
   const menuItems = [
     {
