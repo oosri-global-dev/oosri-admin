@@ -12,9 +12,12 @@ import TextField from '@/components/lib/TextField';
 import { getCategories, createCategory, updateCategory, deleteCategory, createSubcategory, getSubcategories, updateSubcategory } from '@/network/category';
 import { getAttributes } from '@/network/attribute';
 
+import { uploadToCloudinary } from '@/network/upload';
+
 export default function AllCategoriesScreen() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubModalOpen, setIsSubModalOpen] = useState(false);
@@ -68,64 +71,34 @@ export default function AllCategoriesScreen() {
         cat.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // const handleCreateOrUpdate = async (values) => {
-    //     const formData = new FormData();
-    //     formData.append('name', values.name);
-    //     formData.append('description', values.description);
-    //     if (fileList.length > 0) {
-    //         formData.append('image', fileList[0].originFileObj);
-    //     }
-
-    //     try {
-    //         if (editingCategory) {
-    //             await updateCategory(editingCategory._id, formData);
-    //             message.success('Category updated successfully');
-    //         } else {
-    //             await createCategory(formData);
-    //             message.success('Category created successfully');
-    //         }
-    //         setIsModalOpen(false);
-    //         form.resetFields();
-    //         setFileList([]);
-    //         setEditingCategory(null);
-    //         fetchCategories();
-    //     } catch (error) {
-    //         message.error('Operation failed');
-    //     }
-    // };
     const handleCreateOrUpdate = async (values) => {
-        let payload;
-        let isForm = false;
+        setIsSubmitting(true);
+        try {
+            let secure_url = '';
+            
+            if (fileList.length > 0) {
+                const f = fileList[0];
+                if (f.status === 'uploading') {
+                    message.error('Please wait for the image upload to finish before saving.');
+                    return;
+                }
+                secure_url = f.response || f.url || '';
+            }
 
-        // If user uploaded an image, use FormData
-        if (fileList.length > 0) {
-            payload = new FormData();
-            payload.append('name', values.name);
-            payload.append('description', values.description);
-            payload.append('image', fileList[0].originFileObj);
-            isForm = true;
-        } else {
-            // Otherwise send JSON
-            payload = {
+            const payload = {
                 name: values.name,
                 description: values.description,
+                attributes: values.attributes || []
             };
-        }
-
-        try {
-            const payloadWithAttributes = isForm ? payload : { ...payload, attributes: values.attributes };
-            if (isForm) {
-                // Append attributes to FormData if it is multiform
-                if (values.attributes) {
-                    payload.append('attributes', JSON.stringify(values.attributes));
-                }
+            if (secure_url) {
+                payload.image = secure_url;
             }
 
             if (editingCategory) {
-                await updateCategory(editingCategory._id, payloadWithAttributes, isForm);
+                await updateCategory(editingCategory._id, payload, false);
                 message.success('Category updated successfully');
             } else {
-                await createCategory(payload, isForm);
+                await createCategory(payload, false);
                 message.success('Category created successfully');
             }
 
@@ -137,6 +110,8 @@ export default function AllCategoriesScreen() {
         } catch (error) {
             console.error(error);
             message.error('Operation failed');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -221,6 +196,16 @@ export default function AllCategoriesScreen() {
                                             isFilterable: a.isFilterable
                                         })) || []
                                     });
+                                    if (record.image) {
+                                        setFileList([{
+                                            uid: '-1',
+                                            name: 'Category Image',
+                                            status: 'done',
+                                            url: record.image,
+                                        }]);
+                                    } else {
+                                        setFileList([]);
+                                    }
                                     setIsModalOpen(true);
                                 }}
                             >
@@ -252,6 +237,32 @@ export default function AllCategoriesScreen() {
             ),
         },
     ];
+
+    const handleCustomUpload = async ({ file, onSuccess, onError }) => {
+        try {
+            message.loading({ content: 'Uploading image...', key: 'uploading' });
+            const secure_url = await uploadToCloudinary(file, 'categories/images');
+            onSuccess(secure_url);
+            message.success({ content: 'Image uploaded successfully!', key: 'uploading' });
+        } catch (error) {
+            onError(error);
+            message.error({ content: 'Failed to upload image.', key: 'uploading' });
+        }
+    };
+
+    const handleBeforeUpload = (file) => {
+        const isValidType = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'].includes(file.type);
+        if (!isValidType) {
+            message.error('You can only upload JPG/PNG/GIF file!');
+            return Upload.LIST_IGNORE;
+        }
+        const isLt5M = file.size / 1024 / 1024 < 5;
+        if (!isLt5M) {
+            message.error('Image must be smaller than 5MB!');
+            return Upload.LIST_IGNORE;
+        }
+        return true;
+    };
 
     return (
         <AllCategoriesWrapper>
@@ -332,7 +343,8 @@ export default function AllCategoriesScreen() {
                     </Form.Item>
                     <Form.Item label="Image" style={{ marginBottom: '30px' }}>
                         <Upload
-                            beforeUpload={() => false}
+                            beforeUpload={handleBeforeUpload}
+                            customRequest={handleCustomUpload}
                             fileList={fileList}
                             onChange={({ fileList }) => setFileList(fileList)}
                             maxCount={1}
@@ -417,6 +429,7 @@ export default function AllCategoriesScreen() {
                             bg="var(--oosriPrimary)"
                             color="#fff"
                             height="40px"
+                            loading={isSubmitting}
                         >
                             {editingCategory ? "Update" : "Create"}
                         </Button>
