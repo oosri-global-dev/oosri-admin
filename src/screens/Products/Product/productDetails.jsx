@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import { CreateProductPageWrapper } from '../Create/index.styles';
 import { FlexibleDiv } from '@/components/lib/Box/styles';
 import Button from '@/components/lib/Button';
 
 export function ProductDescription({ html }) {
+  const sanitized =
+    typeof window !== 'undefined' ? DOMPurify.sanitize(html || '') : '';
+
   return (
     <div
       className="prose max-w-none"
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: sanitized }}
     />
   );
 }
