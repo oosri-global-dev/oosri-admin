@@ -26,7 +26,6 @@ export default function AllSellers() {
     shouldGetAllSellers
   );
 
-  console.log('SELLERS DATA', data);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -43,7 +42,6 @@ export default function AllSellers() {
     ? fetchedSellers.filter((seller) => seller?.isVerified === false)
     : [];
 
-  console.log('UNVERIFIED SELLERS', unverifiedSellers);
 
   const items = [
     {

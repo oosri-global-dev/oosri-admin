@@ -88,7 +88,6 @@ export default function AllProductsScreen() {
       setEditModal(false);
       setFilters((prev) => ({ ...prev }));
     } catch (errors) {
-      console.log(errors);
       setModalError(true);
     }
   };

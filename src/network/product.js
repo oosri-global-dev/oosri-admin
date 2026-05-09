@@ -46,8 +46,6 @@ export const toggleProductVisibility = async (id, payload) => {
       `products/admin/${id}/visibility`,
       payload
     );
-    console.log(id, 'Product ID here');
-    console.log(response.data, 'DATA IS HERE');
     return response.data;
   } catch (error) {
     console.error('Error toggling product visibility:', error);

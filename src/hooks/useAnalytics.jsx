@@ -24,7 +24,6 @@ export const useAnalyticsData = (period) => {
 };
 
 export const useTopPurchasedProducts = (period = '', category = '') => {
-  console.log(period, category, 'THIS IS COMING FOR HOOKS');
   return useQuery({
     queryKey: ['top-purchased-products', period, category],
     queryFn: () => getTopPurchasedProducts(period, category),

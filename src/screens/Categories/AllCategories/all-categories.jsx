@@ -33,12 +33,8 @@ export default function AllCategoriesScreen() {
         setLoading(true);
         try {
             const response = await getCategories();
-            console.log('Categories response:', response);
             if (response?.data?.success) {
-                console.log('Setting categories:', response.data.data);
                 setCategories(response.data.data);
-            } else {
-                console.log('Categories fetch failed or no success flag:', response);
             }
         } catch (error) {
             message.error('Failed to fetch categories');

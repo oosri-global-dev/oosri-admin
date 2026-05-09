@@ -23,7 +23,6 @@ export const useSellers = (searchTerm = '', options = {}) => {
 
         do {
           const res = await getSellers(currentPage);
-          console.log('SELLERS RESPONSE', res.data?.body?.sellers);
           const sellers = res.data?.body?.sellers || [];
           const meta = res.data.meta || {};
 

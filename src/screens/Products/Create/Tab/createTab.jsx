@@ -149,14 +149,12 @@ export const CreateTab=({subCategories,category})=>{
 
       const handleCreateProduct=async ()=>{
         try{
-          const response=await createProduct(payload)
+          await createProduct(payload)
           setModalError(false)
-          console.log(response)
           handleModalOpen()
         }catch(errors){
           setModalError(true)
           handleModalOpen()
-          console.log(errors)
           setErrorText(errors.response.data.error)
         }
       }

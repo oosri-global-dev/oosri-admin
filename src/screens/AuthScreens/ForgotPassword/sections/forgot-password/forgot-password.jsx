@@ -10,7 +10,6 @@ export default function ForgotPassword({ setStep }) {
   const [form] = Form.useForm();
 
   const handleSubmit = async (values) => {
-    console.log("values", values);
     setStep(2);
   };
 

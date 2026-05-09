@@ -21,8 +21,6 @@ export default function AdminProfile() {
     dispatch,
   } = useContext(MainContext);
 
-  console.log(user, 'ORIGINAL USER');
-
   const [profileData, setProfileData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',

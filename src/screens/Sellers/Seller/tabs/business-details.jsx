@@ -4,7 +4,6 @@ import HeaderTextAndSub from '@/screens/Products/Product/simple-components/simpl
 import GovVerification from '@/assets/images/profile.jpg';
 
 export default function BusinessDetails({ businessDetails }) {
-  console.log('BUSINESS DETAILS', businessDetails);
   return (
     <SellerWrapper>
       <FlexibleDiv

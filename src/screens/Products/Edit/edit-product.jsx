@@ -112,7 +112,7 @@ export default function EditProduct({ data, id, setEdit, subCategories }) {
       setLoading(false);
       setOpenModal(true);
     } catch (errors) {
-      console.log(errors);
+      // edit failure surfaced by modal state
     } finally {
       setLoading(false);
     }

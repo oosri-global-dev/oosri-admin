@@ -27,12 +27,9 @@ export default function DashboardScreen() {
   const { data, isLoading, error } = useDashboardData(
     selectedFilter?.toLowerCase()
   );
-  console.log('DASHBOARD DATA', data);
   const dashboardSummary = data?.overview?.data?.body?.dashboardSummary || {};
   const dashboardSalesOverview =
     data?.summary?.data?.body?.dashboardSalesOverview || [];
-
-  console.log('Dashboard Sales Overview', dashboardSalesOverview);
 
   let graphOptions = {};
   let startDate = '';
@@ -86,7 +83,6 @@ export default function DashboardScreen() {
         const options = { weekday: 'short' };
         const dayOfWeek = date.toLocaleDateString('en-US', options);
         graphOptions[dayOfWeek] = dashboardSalesOverview[index].totalSales;
-        console.log('WEEKLY', graphOptions);
       } else if (selectedFilter === 'Monthly') {
         const options = { month: 'short' };
         const dayOfWeek = date.toLocaleDateString('en-US', options);

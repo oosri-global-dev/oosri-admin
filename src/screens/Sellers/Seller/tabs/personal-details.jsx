@@ -4,7 +4,6 @@ import HeaderTextAndSub from '@/screens/Products/Product/simple-components/simpl
 import { formatISODateWithOrdinal } from '@/utils/format-date';
 
 export default function PersonalDetails({ personalDetails }) {
-  console.log(personalDetails, "PERSONAL DETAILS");
   return (
     <SellerWrapper>
       <FlexibleDiv

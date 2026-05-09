@@ -22,7 +22,6 @@ export default function Product({ productId }) {
   // const router = useRouter();
   // const { productId } = router.query;
   const { data, isLoading } = useProduct(productId);
-  console.log(data?.data?.body, 'data from product hook');
   // const fetchProductData=async ()=>{
   //   let id = window.location.pathname
   //   let regex = /\/product\/([a-f0-9]{24})/;
@@ -69,7 +68,7 @@ export default function Product({ productId }) {
           setSubCategories(subCategoryOptions);
         }
       } catch (errors) {
-        console.log(errors);
+        // category fetch failure leaves subcategory selector empty
       }
     };
     fetchCategories();

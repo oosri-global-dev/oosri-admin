@@ -172,7 +172,6 @@ export default function SaleAnalytics() {
               </div>
               <Select
                 onChange={(value, option) => {
-                  console.log('Select onChange:', value, option);
                   handleYearChange(option);
                 }}
                 options={options}

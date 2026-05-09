@@ -49,21 +49,15 @@ export default function FxRateScreen() {
     }
 
     function handleSubmit() {
-        console.log('[FxRate] Submit clicked. Validating...', { rateInput, noteInput, parsedRate });
-
         if (!validate()) {
-            console.warn('[FxRate] Validation failed:', validationError);
             return;
         }
-
-        console.log('[FxRate] Validation passed. Dispatching updateRate hook...');
 
         try {
             updateRate(
                 { usdToNgnRate: parsedRate, note: noteInput.trim() },
                 {
-                    onSuccess: (data) => {
-                        console.log('[FxRate] API Success:', data);
+                    onSuccess: () => {
                         notifySuccess(`Exchange rate updated: $1 = ₦${parsedRate.toLocaleString()}`);
                     },
                     onError: (err) => {
@@ -194,7 +188,6 @@ export default function FxRateScreen() {
                         width="180px"
                         disabled={isSaving}
                         onClick={(e) => {
-                            console.log('[FxRate] Raw Button Click Registered! isSaving:', isSaving);
                             handleSubmit(e);
                         }}
                     >
