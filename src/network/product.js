@@ -37,20 +37,10 @@ export const createProduct = async (payload) => {
 };
 
 export const editProduct = async (params, payload) => {
-  const data = await formInstance.put(`/products/admin/${params}`, payload);
+  const { data } = await instance.put(`/products/admin/${params}`, payload);
   return data;
 };
 export const toggleProductVisibility = async (id, payload) => {
-  try {
-    const response = await instance.patch(
-      `products/admin/${id}/visibility`,
-      payload
-    );
-    console.log(id, 'Product ID here');
-    console.log(response.data, 'DATA IS HERE');
-    return response.data;
-  } catch (error) {
-    console.error('Error toggling product visibility:', error);
-    throw error;
-  }
+  const { data } = await instance.patch(`products/admin/${id}/visibility`, payload);
+  return data;
 };
