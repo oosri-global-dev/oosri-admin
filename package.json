@@ -1,12 +1,13 @@
 {
-  "name": "oosri-seller",
+  "name": "oosri-admin",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix"
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
@@ -31,8 +32,11 @@
   },
   "devDependencies": {
     "eslint": "^8",
-    "eslint-config-next": "14.1.0"
+    "eslint-config-next": "13.5.5"
   },
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.8.0"
+  }
 }
