@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Tag } from 'antd';
 import { PencilSimple } from '@phosphor-icons/react';
+import { useFxRate } from '@/hooks/useFxRate';
+
+const DEFAULT_RATE = 1355;
 
 function InfoRow({ label, value }) {
   if (!value && value !== 0) return null;
@@ -71,7 +74,26 @@ const CATEGORY_FIELDS = {
   Jewelry:           [['Length', 'length'], ['Diameter', 'diameter'], ['Stone Type', 'stoneType'], ['Metal Type', 'metalType']],
 };
 
+function PriceRow({ label, ngnValue, rate, highlight }) {
+  if (ngnValue == null || ngnValue === 0) return null;
+  const usd = (ngnValue / rate).toFixed(2);
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <span style={{ fontSize: '.79rem', color: '#6b7280', fontWeight: 500 }}>{label}</span>
+      <div style={{ textAlign: 'right' }}>
+        <div style={{ fontSize: '.84rem', fontWeight: 600, color: highlight ? '#16a34a' : '#111827' }}>
+          ₦{Number(ngnValue).toLocaleString()}
+        </div>
+        <div style={{ fontSize: '.72rem', color: '#6b7280' }}>~${usd}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductDetailsView({ data, onEdit }) {
+  const { data: fxData } = useFxRate();
+  const rate = fxData?.body?.usdToNgnRate || DEFAULT_RATE;
+
   if (!data) return null;
 
   const catFields = CATEGORY_FIELDS[data.category] || [];
@@ -107,12 +129,27 @@ export default function ProductDetailsView({ data, onEdit }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           <Card title="Pricing">
-            <InfoRow label="Regular Price"   value={data.regularPrice ? `₦${Number(data.regularPrice).toLocaleString()}` : null} />
-            <InfoRow label="Sales Price"     value={data.salesPrice   ? `₦${Number(data.salesPrice).toLocaleString()}` : null} />
-            {data.previousPrice && data.previousPrice !== data.regularPrice &&
-              <InfoRow label="Previous Price" value={`₦${Number(data.previousPrice).toLocaleString()}`} />
-            }
-            <InfoRow label="Discount"        value={data.discount} />
+            <div style={{ paddingTop: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 24, padding: '4px 0 6px', borderBottom: '1px solid #e2e8f0', marginBottom: 2 }}>
+                <span style={{ fontSize: '.72rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '.04em' }}>NGN</span>
+                <span style={{ fontSize: '.72rem', color: '#9ca3af', fontWeight: 600, letterSpacing: '.04em', minWidth: 56, textAlign: 'right' }}>USD (est.)</span>
+              </div>
+              <PriceRow label="Regular Price"  ngnValue={data.regularPrice}  rate={rate} />
+              <PriceRow label="Sales Price"    ngnValue={data.salesPrice && data.salesPrice !== data.regularPrice ? data.salesPrice : null} rate={rate} highlight />
+              <PriceRow label="Discount Price" ngnValue={data.discountPrice} rate={rate} highlight />
+              {data.previousPrice && data.previousPrice !== data.regularPrice &&
+                <PriceRow label="Previous Price" ngnValue={data.previousPrice} rate={rate} />
+              }
+              {data.discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <span style={{ fontSize: '.79rem', color: '#6b7280', fontWeight: 500 }}>Discount</span>
+                  <span style={{ fontSize: '.84rem', fontWeight: 600, color: '#f59e0b' }}>{data.discount}%</span>
+                </div>
+              )}
+              <div style={{ paddingTop: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: '.72rem', color: '#9ca3af' }}>Rate used: $1 = ₦{Number(rate).toLocaleString()}</span>
+              </div>
+            </div>
           </Card>
 
           <Card title="Product Details">

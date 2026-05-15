@@ -8,6 +8,9 @@ import { AllProductsWrapper } from "./all-products.styles";
 import { useProducts } from "@/hooks/useProducts";
 import { useToggleVisibility } from "@/hooks/useToggleVisibility";
 import { useQueryClient } from "@tanstack/react-query";
+import { useFxRate } from "@/hooks/useFxRate";
+
+const DEFAULT_RATE = 1355;
 
 const SORT_OPTIONS = [
   { value: "newest",     label: "Newest first"   },
@@ -51,6 +54,8 @@ export default function AllProductsScreen() {
   const [toggleLoading, setToggleLoading] = useState({});
 
   const { data, isLoading } = useProducts(filters);
+  const { data: fxData } = useFxRate();
+  const rate = fxData?.body?.usdToNgnRate || DEFAULT_RATE;
   const pagination = data?.body?.pagination || {};
 
   useEffect(() => {
@@ -100,9 +105,27 @@ export default function AllProductsScreen() {
     },
     {
       title: "Price",
-      dataIndex: "regularPrice",
       key: "price",
-      render: (v) => v != null ? `$${Number(v).toFixed(2)}` : "—",
+      render: (_, p) => {
+        const regular = p.regularPrice;
+        const sale    = p.salesPrice && p.salesPrice > 0 && p.salesPrice !== p.regularPrice ? p.salesPrice : null;
+        const active  = sale ?? regular;
+        if (active == null) return <span style={{ color: '#9ca3af' }}>—</span>;
+        const usd = (active / rate).toFixed(2);
+        return (
+          <div style={{ lineHeight: 1.4 }}>
+            {sale && (
+              <div style={{ fontSize: '.72rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                ₦{Number(regular).toLocaleString()}
+              </div>
+            )}
+            <div style={{ fontSize: '.84rem', fontWeight: 600, color: sale ? '#16a34a' : '#111827' }}>
+              ₦{Number(active).toLocaleString()}
+            </div>
+            <div style={{ fontSize: '.72rem', color: '#6b7280' }}>~${usd}</div>
+          </div>
+        );
+      },
     },
     {
       title: "Stock",
