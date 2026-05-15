@@ -18,10 +18,12 @@ export const getProductAnalytics = async (period) => {
   }
 };
 
-export const getTopPurchasedProducts = async (period = '', category = '') => {
+export const getTopPurchasedProducts = async (period = 'thisWeek', category = '') => {
   try {
+    const params = new URLSearchParams({ dateFilter: period });
+    if (category && typeof category === 'string') params.set('category', category);
     const response = await instance.get(
-      `/admin/analytics/top-purchase-products?dateFilter=${period}&category=${category}`
+      `/admin/analytics/top-purchase-products?${params.toString()}`
     );
     return response.data;
   } catch (error) {
