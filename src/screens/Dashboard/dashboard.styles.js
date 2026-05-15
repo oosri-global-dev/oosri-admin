@@ -176,4 +176,7 @@ export const DashboardWrapper = styled.div`
   @media (max-width: 480px) {
     .kpi__grid { grid-template-columns: 1fr; }
   }
+
+  .clickable__row { cursor: pointer; }
+  .ant-table-tbody > tr.clickable__row:hover > td { background: #fafbfc !important; }
 `;

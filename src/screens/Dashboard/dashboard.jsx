@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { AreaChart } from "react-chartkick";
 import "chartkick/chart.js";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { orderTableColumns } from "@/utils/order-helpers";
 import OrdersTable from "@/components/screen-components/ordersTable";
 
 import { GoStack as ProductsIcon } from "react-icons/go";
@@ -119,7 +118,7 @@ export default function DashboardScreen() {
             <Link href="/order" className="see__all">See all</Link>
           </div>
           <div className="table__body">
-            <OrdersTable dashboardTableColumns={orderTableColumns()} />
+            <OrdersTable />
           </div>
         </div>
 
