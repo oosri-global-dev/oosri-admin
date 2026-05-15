@@ -1,82 +1,68 @@
 'use client';
-import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import 'chart.js/auto';
-const Line = dynamic(() => import('react-chartjs-2').then((mod) => mod.Line), {
-  ssr: false,
-});
+
+const Line = dynamic(() => import('react-chartjs-2').then((mod) => mod.Line), { ssr: false });
+
+const BRAND   = '#fc5353';
+const BRAND_A = 'rgba(252,83,83,0.12)';
+const GRID    = 'rgba(226,232,240,0.6)';
 
 export default function SalesChart({ labels, data }) {
-  const chartOptions = {
-    resizeDelay: 2,
+  const options = {
     responsive: true,
-    aspectRatio: 3,
-
+    maintainAspectRatio: false,
     plugins: {
-      filler: {
-        propagate: false,
-      },
-      title: {
-        display: false,
-      },
-      legend: {
-        display: false,
-      },
-      chartAreaBorder: {
-        display: false,
+      legend: { display: false },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: '#fff',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        titleColor: '#111827',
+        bodyColor: '#374151',
+        padding: 10,
+        callbacks: {
+          label: (ctx) => ` $${Number(ctx.raw || 0).toLocaleString()}`,
+        },
       },
     },
     scales: {
       x: {
-        grid: {
-          display: false,
-        },
-        border: {
-          display: false,
-        },
+        grid: { display: false },
+        border: { display: false },
+        ticks: { color: '#9ca3af', font: { size: 11 } },
       },
       y: {
-        grid: {
-          color: 'rgba(0, 128, 128, 0.1)',
+        grid: { color: GRID },
+        border: { display: false },
+        ticks: {
+          color: '#9ca3af',
+          font: { size: 11 },
+          callback: (v) => `$${Number(v).toLocaleString()}`,
         },
       },
     },
-    interaction: {
-      intersect: false,
-    },
-    tooltip: {
-      enabled: false,
-    },
-    hover: {
-      mode: null,
-      animationDuration: 0,
-    },
     elements: {
-      point: {
-        radius: 0,
-        hoverRadius: 0,
-      },
-      line: {
-        borderWidth: 1,
-      },
+      point: { radius: 0, hoverRadius: 5, hoverBackgroundColor: BRAND, hoverBorderColor: '#fff', hoverBorderWidth: 2 },
+      line:  { borderWidth: 2, tension: 0.4 },
     },
+    interaction: { intersect: false, mode: 'index' },
   };
 
-  return (
-    <Line
-      options={chartOptions}
-      data={{
-        labels: labels,
-        datasets: [
-          {
-            label: 'Sales',
-            fill: 'start',
-            borderJoinStyle: 'round',
-            capBezierPoints: false,
-            data: data,
-          },
-        ],
-      }}
-    />
-  );
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: 'Earnings',
+        data,
+        borderColor: BRAND,
+        backgroundColor: BRAND_A,
+        fill: 'start',
+      },
+    ],
+  };
+
+  return <Line options={options} data={chartData} />;
 }

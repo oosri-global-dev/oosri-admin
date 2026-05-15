@@ -44,7 +44,7 @@ export const SaleAnalyticsWrapper = styled.div`
     }
 
     .chart__title { font-size: 1rem; font-weight: 700; color: #111827; margin: 0; }
-    .chart__body  { padding: 12px 24px 24px; height: 280px; }
+    .chart__body  { padding: 12px 24px 24px; height: 280px; position: relative; }
   }
 
   /* ── generic section card ────────── */

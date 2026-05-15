@@ -26,7 +26,7 @@ const PERIOD_OPTIONS = [
 
 export default function SaleAnalytics() {
   const [yearFilter,        setYearFilter]        = useState("thisYear");
-  const [selectedCategory,  setSelectedCategory]  = useState("Sculpture");
+  const [selectedCategory,  setSelectedCategory]  = useState(null);
   const [selectedPeriod,    setSelectedPeriod]    = useState("thisWeek");
   const [, error] = useNotification();
 
@@ -168,7 +168,6 @@ export default function SaleAnalytics() {
             <ProductCategorySelect
               value={selectedCategory}
               onChange={setSelectedCategory}
-              allowClear
               style={{ width: 220 }}
             />
             <div className="period__tabs">

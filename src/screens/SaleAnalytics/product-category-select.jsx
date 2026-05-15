@@ -1,32 +1,29 @@
-import React from 'react';
-import { Select, Spin } from 'antd';
-import { useCategories } from '@/hooks/useAnalytics';
+import { Select, Spin } from "antd";
+import { useCategories } from "@/hooks/useAnalytics";
+
 const { Option } = Select;
 
 const ProductCategorySelect = ({
   value,
   onChange,
-  placeholder = 'Select Category',
+  placeholder = "All Categories",
   allowClear = true,
+  style,
 }) => {
   const { data: categories = [], isLoading, isError } = useCategories();
 
   return (
     <Select
-      value={value}
+      value={value || undefined}
       onChange={onChange}
       placeholder={placeholder}
-      style={{ width: '90%' }}
+      style={style}
       loading={isLoading}
       allowClear={allowClear}
       notFoundContent={
-        isLoading ? (
-          <Spin size="small" />
-        ) : isError ? (
-          'Failed to load'
-        ) : (
-          'No categories found'
-        )
+        isLoading ? <Spin size="small" /> :
+        isError   ? "Failed to load"      :
+                    "No categories found"
       }
     >
       {categories?.map((cat) => (
