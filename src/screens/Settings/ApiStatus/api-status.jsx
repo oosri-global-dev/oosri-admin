@@ -3,20 +3,20 @@ import { Tooltip } from "antd";
 import { ApiStatusWrapper } from "./api-status.styles";
 import { useApiHealth } from "@/hooks/useApiHealth";
 import { MdRefresh as RefreshIcon } from "react-icons/md";
-import { SiStripe, SiPaystack, SiMongodb, SiRedis, SiAlgolia, SiCloudinary } from "react-icons/si";
-import { LuTruck as DhlIcon } from "react-icons/lu";
-import { MdOutlineEmail as EmailIcon } from "react-icons/md";
-import { TbBrandFedex as FedExIcon } from "react-icons/tb";
+import { SiStripe, SiMongodb, SiRedis, SiAlgolia } from "react-icons/si";
+import { LuTruck as DhlIcon, LuCloud as CloudinaryIcon } from "react-icons/lu";
+import { MdOutlineEmail as EmailIcon, MdCreditCard as PaystackIcon } from "react-icons/md";
+import { TbTruck as FedExIcon } from "react-icons/tb";
 
 const SERVICE_META = {
   mongodb:    { label: "MongoDB",    icon: SiMongodb,    color: "#47a248" },
   redis:      { label: "Redis",      icon: SiRedis,      color: "#dc382d" },
   stripe:     { label: "Stripe",     icon: SiStripe,     color: "#635bff" },
-  paystack:   { label: "Paystack",   icon: SiPaystack,   color: "#0ba360" },
+  paystack:   { label: "Paystack",   icon: PaystackIcon, color: "#0ba360" },
   dhl:        { label: "DHL",        icon: DhlIcon,      color: "#cc0000" },
   fedex:      { label: "FedEx",      icon: FedExIcon,    color: "#ff6200" },
   algolia:    { label: "Algolia",    icon: SiAlgolia,    color: "#003dff" },
-  cloudinary: { label: "Cloudinary", icon: SiCloudinary, color: "#3448c5" },
+  cloudinary: { label: "Cloudinary", icon: CloudinaryIcon, color: "#3448c5" },
   email:      { label: "Email",      icon: EmailIcon,    color: "#6b7280" },
 };
 
