@@ -3,11 +3,12 @@ import { useUpdateOrderStatus } from '@/hooks/useUpdateOrderStatus';
 import styled from 'styled-components';
 
 const STATUS_OPTIONS = [
-  { value: 'pending',    label: 'Pending'    },
-  { value: 'processing', label: 'Processing' },
-  { value: 'completed',  label: 'Completed'  },
-  { value: 'canceled',   label: 'Canceled'   },
-  { value: 'on-hold',    label: 'On Hold'    },
+  { value: 'pending',           label: 'Pending'           },
+  { value: 'processing',        label: 'Processing'        },
+  { value: 'pending_logistics', label: 'Pending Logistics' },
+  { value: 'completed',         label: 'Completed'         },
+  { value: 'on-hold',           label: 'On Hold'           },
+  { value: 'canceled',          label: 'Canceled'          },
 ];
 
 const STATUS_COLORS = {

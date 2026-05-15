@@ -66,12 +66,15 @@ export const OrderWrapper = styled.div`
 
     .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
-    &.delivered    { background: #f0fdf4; color: #16a34a; .dot { background: #16a34a; } }
-    &.processing   { background: #fffbeb; color: #b45309; .dot { background: #f59e0b; } }
-    &.pickup       { background: #eff6ff; color: #1d4ed8; .dot { background: #3b82f6; } }
-    &.cancelled    { background: #fff1f2; color: #be123c; .dot { background: #fc5353; } }
-    &.paid         { background: #f0fdf4; color: #16a34a; .dot { background: #16a34a; } }
-    &.pending      { background: #fffbeb; color: #b45309; .dot { background: #f59e0b; } }
+    &.delivered           { background: #f0fdf4; color: #16a34a; .dot { background: #16a34a; } }
+    &.completed           { background: #dcfce7; color: #15803d; .dot { background: #22c55e; } }
+    &.processing          { background: #fffbeb; color: #b45309; .dot { background: #f59e0b; } }
+    &.pending_logistics   { background: #eff6ff; color: #1d4ed8; .dot { background: #3b82f6; } }
+    &.pickup              { background: #eff6ff; color: #1d4ed8; .dot { background: #3b82f6; } }
+    &.cancelled           { background: #fff1f2; color: #be123c; .dot { background: #fc5353; } }
+    &.on-hold             { background: #f5f3ff; color: #7c3aed; .dot { background: #8b5cf6; } }
+    &.paid                { background: #f0fdf4; color: #16a34a; .dot { background: #16a34a; } }
+    &.pending             { background: #fff7ed; color: #c2410c; .dot { background: #f97316; } }
   }
 
   .amount__cell {

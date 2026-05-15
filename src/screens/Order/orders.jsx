@@ -9,12 +9,15 @@ import { IoSearchOutline as SearchIcon } from "react-icons/io5";
 import { formatDate } from "@/utils/format-date";
 
 const STATUS_MAP = {
-  "delivered":      "delivered",
-  "processing":     "processing",
-  "sent for pickup":"pickup",
-  "canceled":       "cancelled",
-  "cancelled":      "cancelled",
-  "pending":        "pending",
+  "delivered":          "delivered",
+  "processing":         "processing",
+  "sent for pickup":    "pickup",
+  "canceled":           "cancelled",
+  "cancelled":          "cancelled",
+  "pending":            "pending",
+  "completed":          "completed",
+  "on-hold":            "on-hold",
+  "pending_logistics":  "pending_logistics",
 };
 
 function OrderStatusPill({ status }) {
