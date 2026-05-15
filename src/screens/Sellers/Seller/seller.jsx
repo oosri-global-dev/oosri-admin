@@ -12,7 +12,6 @@ export default function Seller({ sellerId }) {
   const { data, isLoading, error } = useSeller(sellerId);
   const sellerData = data?.data?.body || {};
 
-  console.log(sellerData, "SELLER DATA");
 
   const personalDetails =
     {

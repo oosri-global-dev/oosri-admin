@@ -40,8 +40,6 @@ export default function OrderScreen() {
   const totalPages = data?.body?.totalPages;
   const currentPage = data?.body?.currentPage;
 
-  console.log('ORDERS', data);
-
   const options = [{ value: 'This Year', label: 'This Year' }];
   const currencyOptions = [
     { value: 'NGN', label: 'NGN (₦)' },

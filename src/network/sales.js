@@ -30,7 +30,6 @@ export const getTopPurchasedProducts = async (period = '', category = '') => {
     const response = await instance.get(
       `/admin/analytics/top-purchase-products?dateFilter=${period}&category=${category}`
     );
-    console.log(response, 'RESPONSE FROM API CALL');
     return response.data;
   } catch (error) {
     console.error('Error fetching product analytics:', error);

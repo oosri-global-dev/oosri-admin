@@ -62,8 +62,6 @@ const AppWrapper = ({ children }) => {
         }
         setIsPageLoading(false);
       } catch (err) {
-        console.clear();
-        console.log(err, "err");
         // Only redirect to home if not on an excluded path
         if (
           !excludedPaths.some((path) => pathname.startsWith(path)) &&

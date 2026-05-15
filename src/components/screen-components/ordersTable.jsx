@@ -15,13 +15,7 @@ export default function OrdersTable({ dashboardTableColumns }) {
   const [selectionType] = useState('checkbox');
 
   const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => {
-      console.log(
-        `selectedRowKeys: ${selectedRowKeys}`,
-        'selectedRows: ',
-        selectedRows
-      );
-    },
+    onChange: () => {},
     getCheckboxProps: (record) => ({
       disabled: record.name === 'Disabled User',
       name: record.name,
@@ -31,7 +25,6 @@ export default function OrdersTable({ dashboardTableColumns }) {
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
-  console.log(data?.data?.body, 'data from orders hook');
 
   return (
     <FlexibleDiv>

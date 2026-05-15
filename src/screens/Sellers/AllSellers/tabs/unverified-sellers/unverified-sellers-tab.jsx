@@ -5,8 +5,6 @@ import Button from '@/components/lib/Button';
 import { formatDate } from '@/utils/format-date';
 
 export default function UnVerifiedSellersTab({ sellers, loading, error }) {
-  //incase you unverify a seller later, should still be in all-sellers
-  console.log(sellers, 'SELLERS HERE');
   const content = (
     <div className="popover__custom">
       <Button

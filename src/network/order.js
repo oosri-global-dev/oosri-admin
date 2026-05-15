@@ -19,9 +19,7 @@ export const searchOrders = async ({ searchTerm }) => {
 
 export const getOrder = async (orderId) => {
   if (!orderId) return null;
-  console.log('ORDER ID', orderId);
   const data = await instance.get(`/admin/order/${orderId}`);
-  console.log('ORDER DATA', data);
   return data;
 };
 

@@ -14,7 +14,6 @@ export function ProductDescription({ html }) {
 
 export const ProductDetails = ({ data, setEdit }) => {
   const [category, setCategory] = useState(data?.category);
-  console.log(data, 'data from product details');
 
   return (
     <CreateProductPageWrapper style={{ width: '100%' }}>

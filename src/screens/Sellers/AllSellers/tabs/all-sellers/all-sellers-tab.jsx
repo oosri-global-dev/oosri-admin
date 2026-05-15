@@ -11,7 +11,6 @@ const PopoverContent = ({ obj, router }) => (
       height="30px"
       radius="5px"
       onClick={() => {
-        console.log(obj.id, "OBJ HERE")
         router.push(`/seller/${obj && obj?.id}`);
       }}
     >
@@ -91,7 +90,6 @@ export default function AllSellersTab({ sellers, loading, error }) {
       dataIndex: 'registrationDate',
       key: 'registrationDate',
       render: (_, obj) => {
-        console.log(obj);
         <Space>
           <Space direction="vertical" size={1}>
             <p>{formatDate(obj?.createdAt)}</p>

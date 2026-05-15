@@ -42,7 +42,7 @@ export default function CreateProductPage(){
         setActiveTab(items[0].key)
         setLoading(false)
       }catch(errors){
-        console.log(errors)
+        // category/product fetch failure handled by empty state in UI
       }
     }
     handleSubCategories()

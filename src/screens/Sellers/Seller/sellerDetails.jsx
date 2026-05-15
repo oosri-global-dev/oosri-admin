@@ -6,7 +6,6 @@ import Button from "@/components/lib/Button"
 
 export const SellerDetails=({data,setEdit})=>{
     const [category,setCategory]=useState(data?.category)
-    console.log(data, "data from product details")
 
     return(
         <CreateProductPageWrapper style={{width:"100%"}}>

@@ -27,13 +27,7 @@ export const capitalizeFirstLetter = (string) => {
 };
 
 export const rowSelection = {
-  onChange: (selectedRowKeys, selectedRows) => {
-    console.log(
-      `selectedRowKeys: ${selectedRowKeys}`,
-      'selectedRows: ',
-      selectedRows
-    );
-  },
+  onChange: () => {},
   getCheckboxProps: (record) => ({
     disabled: record.name === 'Disabled User',
     name: record.name,
@@ -141,7 +135,6 @@ export const orderTableColumns = (currency = 'NGN') => [
     dataIndex: 'orderStatus',
     key: 'orderStatus',
     render: (_, obj) => {
-      console.log(obj, 'ORDER DETAILS');
       return (
         <Space size="middle">
           {_?.toLowerCase() === 'sent for pickup' && (
@@ -180,7 +173,6 @@ export const orderTableColumns = (currency = 'NGN') => [
       const togglePopup = () => {
         const element = document.getElementById(obj.orderId);
         if (element) {
-          console.log(element.classList);
           if (element.classList.length > 1) {
             element.classList.remove('invinsible');
           } else {
