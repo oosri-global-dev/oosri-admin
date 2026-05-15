@@ -12,8 +12,8 @@ export const useUpdateOrderStatus = (orderId) => {
     return useMutation({
         mutationFn: (newStatus) => updateOrderStatus(orderId, newStatus),
         onSuccess: () => {
-            // Invalidate the specific order cache so OrderDetails re-fetches
             queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
         },
     });
 };
