@@ -71,15 +71,48 @@ export default function AllBuyers() {
     onError:   () => error("Failed to unsuspend buyer"),
   });
 
-  const ActionMenu = useCallback(({ buyer }) => (
-    <div className="action__menu">
-      <div className="action__item" onClick={() => router.push(`/buyer/${buyer.id}`)}>View Profile</div>
-      {buyer.isSuspended
-        ? <div className="action__item" onClick={() => unsuspend(buyer.id)}>Unsuspend</div>
-        : <div className="action__item danger" onClick={() => suspend({ id: buyer.id, reason: "Admin action" })}>Suspend</div>
-      }
-    </div>
-  ), [router, suspend, unsuspend]);
+  const menuStyle = { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 180, padding: 4 };
+
+  const ActionMenu = useCallback(({ buyer }) => {
+    const [hoveredItem, setHoveredItem] = useState(null);
+    const itemStyle = (key, danger) => ({
+      width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 6,
+      border: 'none', fontSize: '.83rem', fontWeight: 500, cursor: 'pointer',
+      fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8, transition: 'background .1s',
+      color: danger ? '#dc2626' : '#111827',
+      background: hoveredItem === key ? (danger ? '#fef2f2' : '#f5f5f5') : 'none',
+    });
+    return (
+      <div style={menuStyle}>
+        <button
+          style={itemStyle('view')}
+          onClick={() => router.push(`/buyer/${buyer.id}`)}
+          onMouseEnter={() => setHoveredItem('view')}
+          onMouseLeave={() => setHoveredItem(null)}
+        >
+          View Profile
+        </button>
+        {buyer.isSuspended
+          ? <button
+              style={itemStyle('suspend')}
+              onClick={() => unsuspend(buyer.id)}
+              onMouseEnter={() => setHoveredItem('suspend')}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              Unsuspend
+            </button>
+          : <button
+              style={itemStyle('suspend', true)}
+              onClick={() => suspend({ id: buyer.id, reason: "Admin action" })}
+              onMouseEnter={() => setHoveredItem('suspend')}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              Suspend Buyer
+            </button>
+        }
+      </div>
+    );
+  }, [router, suspend, unsuspend]);
 
   const columns = [
     {

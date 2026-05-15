@@ -16,11 +16,29 @@ const SORT_OPTIONS = [
   { value: "price_desc", label: "Price: high–low" },
 ];
 
+const menuStyle = { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 180, padding: 4 };
+const menuItemStyle = { width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 6, border: 'none', background: 'none', fontSize: '.83rem', fontWeight: 500, color: '#111827', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8, transition: 'background .1s' };
+
+function MenuItem({ onClick, danger, children }) {
+  const [hovered, setHovered] = useState(false);
+  const hoverBg = danger ? '#fef2f2' : '#f5f5f5';
+  return (
+    <button
+      onClick={onClick}
+      style={{ ...menuItemStyle, color: danger ? '#dc2626' : '#111827', background: hovered ? hoverBg : 'none' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
+
 function ActionMenu({ product }) {
   const router = useRouter();
   return (
-    <div className="action__menu">
-      <button onClick={() => router.push(`/product/${product._id}`)}>View Details</button>
+    <div style={menuStyle}>
+      <MenuItem onClick={() => router.push(`/product/${product._id}`)}>View Details</MenuItem>
     </div>
   );
 }

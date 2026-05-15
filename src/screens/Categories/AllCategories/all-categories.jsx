@@ -153,13 +153,23 @@ export default function AllCategoriesScreen() {
     return true;
   };
 
-  const ActionMenu = ({ record }) => (
-    <div className="action__menu">
-      <button onClick={() => openEdit(record)}>Edit</button>
-      <button onClick={() => handleManageSubs(record)}>Subcategories</button>
-      <button className="danger" onClick={() => handleDelete(record._id)}>Delete</button>
-    </div>
-  );
+  const ActionMenu = ({ record }) => {
+    const [hov, setHov] = useState(null);
+    const item = (key, danger) => ({
+      width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 6,
+      border: 'none', fontSize: '.83rem', fontWeight: 500, cursor: 'pointer',
+      fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8, transition: 'background .1s',
+      color: danger ? '#dc2626' : '#111827',
+      background: hov === key ? (danger ? '#fef2f2' : '#f5f5f5') : 'none',
+    });
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 180, padding: 4 }}>
+        <button style={item('edit')} onClick={() => openEdit(record)} onMouseEnter={() => setHov('edit')} onMouseLeave={() => setHov(null)}>Edit</button>
+        <button style={item('subs')} onClick={() => handleManageSubs(record)} onMouseEnter={() => setHov('subs')} onMouseLeave={() => setHov(null)}>Subcategories</button>
+        <button style={item('del', true)} onClick={() => handleDelete(record._id)} onMouseEnter={() => setHov('del')} onMouseLeave={() => setHov(null)}>Delete</button>
+      </div>
+    );
+  };
 
   const columns = [
     {

@@ -17,11 +17,33 @@ function StatusPill({ verified }) {
     : <span className="pill unverified"><span className="dot" />Unverified</span>;
 }
 
+const menuStyle = { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 180, padding: 4 };
+
+function MenuItem({ onClick, danger, children }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 6,
+        border: 'none', fontSize: '.83rem', fontWeight: 500, cursor: 'pointer',
+        fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8, transition: 'background .1s',
+        color: danger ? '#dc2626' : '#111827',
+        background: hovered ? (danger ? '#fef2f2' : '#f5f5f5') : 'none',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
+
 function ActionMenu({ seller }) {
   const router = useRouter();
   return (
-    <div className="action__menu">
-      <button onClick={() => router.push(`/seller/${seller.id}`)}>View Profile</button>
+    <div style={menuStyle}>
+      <MenuItem onClick={() => router.push(`/seller/${seller.id}`)}>View Profile</MenuItem>
     </div>
   );
 }
