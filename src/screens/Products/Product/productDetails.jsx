@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Tag } from 'antd';
-import { PencilSimple } from '@phosphor-icons/react';
 import { useFxRate } from '@/hooks/useFxRate';
 
 const DEFAULT_RATE = 1355;
