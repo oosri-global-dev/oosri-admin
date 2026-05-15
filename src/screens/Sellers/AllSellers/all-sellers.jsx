@@ -1,133 +1,130 @@
-import DashboardLayout from '@/components/layouts/DashboardLayout/dashboard-layout';
-import { AllSellersWrapper } from './all-sellers.styles';
-import { useState, useEffect } from 'react';
-import { Tabs, Table } from 'antd';
-import { FlexibleDiv } from '@/components/lib/Box/styles';
-import { IoSearchOutline as SearchIcon } from 'react-icons/io5';
-import TextField from '@/components/lib/TextField';
-import { LuArrowUpDown as FilterArrow } from 'react-icons/lu';
-import Button from '@/components/lib/Button';
-import { useSellers } from '@/hooks/useSellers';
-import AllSellersTab from './tabs/all-sellers/all-sellers-tab';
-import UnVerifiedSellersTab from './tabs/unverified-sellers/unverified-sellers-tab';
+import { useState, useEffect } from "react";
+import { Table, Tabs, Popover } from "antd";
+import { AllSellersWrapper } from "./all-sellers.styles";
+import { useSellers } from "@/hooks/useSellers";
+import { formatDate } from "@/utils/format-date";
+import { useRouter } from "next/router";
+import { IoSearchOutline as SearchIcon } from "react-icons/io5";
+import { HiOutlineEllipsisHorizontal as EllipsisIcon } from "react-icons/hi2";
+
+function initials(first = "", last = "") {
+  return `${first[0] || ""}${last[0] || ""}`.toUpperCase() || "?";
+}
+
+function StatusPill({ verified }) {
+  return verified
+    ? <span className="pill verified"><span className="dot" />Verified</span>
+    : <span className="pill unverified"><span className="dot" />Unverified</span>;
+}
+
+function ActionMenu({ seller }) {
+  const router = useRouter();
+  return (
+    <div className="action__menu">
+      <button onClick={() => router.push(`/seller/${seller.id}`)}>View Profile</button>
+    </div>
+  );
+}
+
+const TABS = [
+  { key: "all",         label: "All Sellers"       },
+  { key: "unverified",  label: "Unverified"        },
+];
 
 export default function AllSellers() {
-  const [activeTab, setActiveTab] = useState('all-sellers');
-  const [searchTerm, setSearchTerm] = useState();
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-
-  const isUnverifiedTab = activeTab === 'unverified-sellers';
-  const isSearching = debouncedSearchTerm?.trim() !== '';
-
-  const shouldGetAllSellers = isUnverifiedTab && !isSearching;
-
-  const { data, isLoading, error } = useSellers(
-    debouncedSearchTerm,
-    shouldGetAllSellers
-  );
-
-  console.log('SELLERS DATA', data);
+  const router = useRouter();
+  const [tab, setTab]       = useState("all");
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
+    const t = setTimeout(() => setDebounced(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
-    return () => clearTimeout(timeout);
-  }, [searchTerm]);
+  const isUnverified = tab === "unverified";
+  const { data, isLoading } = useSellers(debounced, isUnverified);
 
-  const fetchedSellers = data?.sellers || [];
-  const allSellers = !isUnverifiedTab ? fetchedSellers : [];
+  const allSellers = data?.sellers || [];
+  const sellers = isUnverified
+    ? allSellers.filter((s) => !s.isVerified)
+    : allSellers;
 
-  const unverifiedSellers = isUnverifiedTab
-    ? fetchedSellers.filter((seller) => seller?.isVerified === false)
-    : [];
-
-  console.log('UNVERIFIED SELLERS', unverifiedSellers);
-
-  const items = [
+  const columns = [
     {
-      key: '1',
-      label: 'All Sellers',
+      title: "Seller",
+      key: "seller",
+      render: (_, s) => (
+        <div className="seller__cell">
+          <div className="avatar">{initials(s.firstName, s.lastName)}</div>
+          <div>
+            <p className="name">{s.firstName} {s.lastName}</p>
+            <p className="email">{s.email}</p>
+          </div>
+        </div>
+      ),
     },
     {
-      key: '2',
-      label: 'Unverified Sellers',
+      title: "Country",
+      dataIndex: "country",
+      key: "country",
+      render: (v) => v || "—",
+    },
+    {
+      title: "Joined",
+      key: "joined",
+      render: (_, s) => formatDate(s.createdAt) || "—",
+    },
+    {
+      title: "Status",
+      key: "status",
+      render: (_, s) => <StatusPill verified={s.isVerified} />,
+    },
+    {
+      title: "",
+      key: "action",
+      width: 48,
+      render: (_, s) => (
+        <Popover
+          content={<ActionMenu seller={s} />}
+          trigger="click"
+          placement="bottomRight"
+        >
+          <EllipsisIcon size={18} style={{ cursor: "pointer", color: "#9ca3af" }} />
+        </Popover>
+      ),
     },
   ];
 
   return (
     <AllSellersWrapper>
-      <Tabs
-        className="tabs__custom"
-        defaultActiveKey="1"
-        items={items}
-        onChange={(e) =>
-          e === '1'
-            ? setActiveTab('all-sellers')
-            : setActiveTab('unverified-sellers')
-        }
-      />
+      <div className="screen__card">
+        <Tabs
+          activeKey={tab}
+          onChange={setTab}
+          items={TABS.map((t) => ({ key: t.key, label: t.label }))}
+        />
 
-      {/* sellers content */}
-      <FlexibleDiv
-        flexDir="column"
-        alignItems="space-between"
-        className="products__table__section"
-      >
-        <FlexibleDiv
-          flexDir="row"
-          justifyContent="space-between"
-          flexWrap="nowrap"
-          className="search__body__section"
-        >
-          <FlexibleDiv
-            className="search__section"
-            flexDir="row"
-            flexWrap="nowrap"
-          >
-            <SearchIcon size={18} className="search__icon" />
-            <TextField
-              id="search"
-              className="text__field__custom"
-              placeholder="Search sellers"
-              autoComplete="new-password"
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+        <div className="toolbar">
+          <div className="search__box">
+            <SearchIcon size={16} />
+            <input
+              placeholder="Search sellers…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
-          </FlexibleDiv>
-          <Button
-            border="1px solid #E0E0E0"
-            height="38px"
-            className="filter__btn__custom"
-            hoverBg="transparent"
-            radius="8px"
-            hoverBorderColor="var(--oosriPrimary) !important"
-            hoverColor="var(--oosriBlack)"
-          >
-            <FilterArrow size={16} color="black" />
-            Filter
-          </Button>
-        </FlexibleDiv>
+          </div>
+        </div>
 
-        <FlexibleDiv className="products__table__wrapper">
-          {activeTab === 'all-sellers' && (
-            <AllSellersTab
-              sellers={allSellers}
-              loading={isLoading}
-              error={error}
-            />
-          )}
-          {activeTab === 'unverified-sellers' && (
-            <UnVerifiedSellersTab
-              sellers={unverifiedSellers}
-              loading={isLoading}
-              error={error}
-            />
-          )}
-        </FlexibleDiv>
-      </FlexibleDiv>
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={sellers}
+          loading={isLoading}
+          pagination={{ pageSize: 10, showSizeChanger: false }}
+          locale={{ emptyText: "No sellers found" }}
+        />
+      </div>
     </AllSellersWrapper>
   );
 }

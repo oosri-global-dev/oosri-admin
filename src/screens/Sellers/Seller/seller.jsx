@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { SellerWrapper } from './seller.styles';
-import DashboardLayout from '@/components/layouts/DashboardLayout/dashboard-layout';
 import { Tabs } from 'antd';
 import PersonalDetails from './tabs/personal-details';
 import BusinessDetails from './tabs/business-details';
@@ -65,8 +64,7 @@ export default function Seller({ sellerId }) {
     },
   ];
   return (
-    <DashboardLayout title="Seller" showBackBtn>
-      <SellerWrapper>
+    <SellerWrapper>
         <Tabs
           className="tabs__custom"
           defaultActiveKey="1"
@@ -90,6 +88,5 @@ export default function Seller({ sellerId }) {
           <BankDetails bankDetails={bankDetails} />
         )}
       </SellerWrapper>
-    </DashboardLayout>
   );
 }

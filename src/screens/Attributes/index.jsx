@@ -7,7 +7,6 @@ import { AllCategoriesWrapper as AttributesWrapper } from '../Categories/AllCate
 import { FlexibleDiv } from '@/components/lib/Box/styles';
 import Button from '@/components/lib/Button';
 import TextField from '@/components/lib/TextField';
-import DashboardLayout from '@/components/layouts/DashboardLayout/dashboard-layout';
 import { getAttributes, createAttribute, updateAttribute, deleteAttribute } from '@/network/attribute';
 
 const { Option } = Select;
@@ -150,8 +149,7 @@ export default function AttributesScreen() {
     ];
 
     return (
-        <DashboardLayout title="Product Attributes">
-            <AttributesWrapper>
+        <AttributesWrapper>
                 <FlexibleDiv flexDir="column" className="categories__table__section">
                     <FlexibleDiv flexDir="row" justifyContent="space-between" className="search__body__section" width="100%">
                         <FlexibleDiv className="search__section" flexDir="row" flexWrap="nowrap">
@@ -281,6 +279,5 @@ export default function AttributesScreen() {
                     </Form>
                 </Modal>
             </AttributesWrapper>
-        </DashboardLayout>
     );
 }

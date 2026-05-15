@@ -107,17 +107,12 @@ export default function PayoutsScreen() {
 
   return (
     <PayoutsWrapper>
-      <div className="page__intro">
-        <h2 className="section__title">Payouts</h2>
-        <p className="section__sub">Review and manage seller payout requests.</p>
-      </div>
-
       <div className="toolbar">
         <div className="filter__tabs">
           {STATUS_FILTERS.map(({ key, label }) => (
             <button
               key={key}
-              className={`tab__btn${statusFilter === key ? " active" : ""}`}
+              className={statusFilter === key ? "active" : ""}
               onClick={() => { setStatus(key); setPage(1); }}
             >
               {label}
@@ -126,20 +121,20 @@ export default function PayoutsScreen() {
         </div>
       </div>
 
-      <div className="table__card">
-        <Table
-          columns={columns}
-          dataSource={payouts}
-          rowKey={(row) => row.id || row._id}
-          loading={isLoading || approving || rejecting}
-          pagination={false}
-        />
-        {total > 20 && (
-          <div className="pagination__row">
-            <Pagination current={page} pageSize={20} total={total} onChange={setPage} showSizeChanger={false} />
-          </div>
-        )}
-      </div>
+      <Table
+        columns={columns}
+        dataSource={payouts}
+        rowKey={(row) => row.id || row._id}
+        loading={isLoading || approving || rejecting}
+        pagination={{
+          current: page,
+          pageSize: 20,
+          total,
+          showSizeChanger: false,
+          onChange: setPage,
+        }}
+        locale={{ emptyText: "No payouts found" }}
+      />
     </PayoutsWrapper>
   );
 }

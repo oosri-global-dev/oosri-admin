@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/layouts/DashboardLayout/dashboard-layout";
 import { DashboardWrapper } from "./dashboard.styles";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -64,8 +63,7 @@ export default function DashboardScreen() {
   }, [salesOverview, period]);
 
   return (
-    <DashboardLayout title="Dashboard" titleSubText="Platform overview">
-      <DashboardWrapper>
+    <DashboardWrapper>
 
         {/* KPI cards */}
         <div className="kpi__grid">
@@ -126,6 +124,5 @@ export default function DashboardScreen() {
         </div>
 
       </DashboardWrapper>
-    </DashboardLayout>
   );
 }

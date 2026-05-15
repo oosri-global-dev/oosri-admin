@@ -1,4 +1,3 @@
-import DashboardLayout from '@/components/layouts/DashboardLayout/dashboard-layout';
 import { ProductWrapper } from './product.styles';
 import { FlexibleDiv } from '@/components/lib/Box/styles';
 import HeaderTextAndSub from './simple-components/simple-components';

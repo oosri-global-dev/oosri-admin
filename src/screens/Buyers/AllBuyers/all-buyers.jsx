@@ -117,14 +117,9 @@ export default function AllBuyers() {
 
   return (
     <AllBuyersWrapper>
-      <div className="page__intro">
-        <h2 className="section__title">Buyers</h2>
-        <p className="section__sub">Manage all registered buyers on the platform.</p>
-      </div>
-
       <div className="toolbar">
         <div className="search__box">
-          <SearchIcon size={16} color="#9ca3af" />
+          <SearchIcon size={16} />
           <input
             placeholder="Search buyers…"
             value={search}
@@ -133,27 +128,27 @@ export default function AllBuyers() {
         </div>
         <div className="filter__tabs">
           {STATUS_FILTERS.map((f) => (
-            <button key={f} className={`tab__btn${statusFilter === f ? " active" : ""}`} onClick={() => setStatusFilter(f)}>
+            <button key={f} className={`${statusFilter === f ? "active" : ""}`} onClick={() => setStatusFilter(f)}>
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="table__card">
-        <Table
-          columns={columns}
-          dataSource={filtered}
-          rowKey="id"
-          loading={isLoading || suspending || unsuspending}
-          pagination={false}
-        />
-        {total > 20 && (
-          <div className="pagination__row">
-            <Pagination current={page} pageSize={20} total={total} onChange={setPage} showSizeChanger={false} />
-          </div>
-        )}
-      </div>
+      <Table
+        columns={columns}
+        dataSource={filtered}
+        rowKey="id"
+        loading={isLoading || suspending || unsuspending}
+        pagination={{
+          current: page,
+          pageSize: 20,
+          total,
+          showSizeChanger: false,
+          onChange: setPage,
+        }}
+        locale={{ emptyText: "No buyers found" }}
+      />
     </AllBuyersWrapper>
   );
 }

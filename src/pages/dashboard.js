@@ -13,6 +13,8 @@ const DashboardPage = () => {
   );
 };
 
-DashboardPage.getLayout = (page) => <DashboardLayout>{page}</DashboardLayout>;
+DashboardPage.getLayout = (page) => (
+  <DashboardLayout title="Dashboard" titleSubText="Platform overview">{page}</DashboardLayout>
+);
 
 export default DashboardPage;

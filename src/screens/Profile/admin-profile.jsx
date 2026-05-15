@@ -1,4 +1,3 @@
-import DashboardLayout from '@/components/layouts/DashboardLayout/dashboard-layout';
 import { SellersProfileWrapper } from './seller-profile.styles';
 import { Tabs, Form, Input } from 'antd';
 import { useState, useContext, useEffect } from 'react';
@@ -102,8 +101,7 @@ export default function AdminProfile() {
   };
 
   return (
-    <DashboardLayout title="My Profile">
-      <SellersProfileWrapper>
+    <SellersProfileWrapper>
         <Tabs
           className="tabs__custom"
           defaultActiveKey="1"
@@ -184,6 +182,5 @@ export default function AdminProfile() {
           </FlexibleDiv>
         )}
       </SellersProfileWrapper>
-    </DashboardLayout>
   );
 }

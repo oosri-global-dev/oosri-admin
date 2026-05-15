@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Switch, Select, Form, Input, Divider, Spin } from "antd";
 import { GatewaysWrapper } from "./payment-gateways.styles";
-import { SiStripe, SiPaystack } from "react-icons/si";
+import { SiStripe } from "react-icons/si";
+import { MdOutlinePayment as PaystackIcon } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { MdOutlineSave as SaveIcon } from "react-icons/md";
 import useNotification from "@/hooks/useNotification";
@@ -143,7 +144,7 @@ export default function PaymentGatewaysScreen() {
           onChange={(k, v) => handleChange("stripe", k, v)}
         />
         <GatewayCard
-          icon={<SiPaystack size={22} />}
+          icon={<PaystackIcon size={22} />}
           name="Paystack"
           color="#0ba360"
           fields={PAYSTACK_FIELDS}

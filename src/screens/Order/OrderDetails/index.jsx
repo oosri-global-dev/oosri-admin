@@ -1,6 +1,5 @@
 'use client';
 
-import DashboardLayout from '@/components/layouts/DashboardLayout/dashboard-layout';
 import { Space, Select, message } from 'antd';
 import { OrderDetailsWrapper } from './index.styles';
 import { FlexibleDiv } from '@/components/lib/Box/styles';
@@ -51,7 +50,7 @@ export default function OrderDetails({ data, isLoading }) {
     ? (data?.formattedAmountUSD ? '$0.00' : '$0.00') // Backend doesn't return deliveryFeeUSD currently, but we can assume or add it
     : data?.formattedDeliveryFeeNGN || '₦0';
   return (
-    <DashboardLayout title={'Order Details'} showBackBtn>
+    <>
       {isLoading ? <CustomLoader /> : null}
       <OrderDetailsWrapper>
         <FlexibleDiv
@@ -305,6 +304,6 @@ export default function OrderDetails({ data, isLoading }) {
           </FlexibleDiv>
         </FlexibleDiv>
       </OrderDetailsWrapper>
-    </DashboardLayout>
+    </>
   );
 }
