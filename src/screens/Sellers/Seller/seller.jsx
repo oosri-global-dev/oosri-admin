@@ -1,92 +1,177 @@
-import { useState } from 'react';
-import { SellerWrapper } from './seller.styles';
-import { Tabs } from 'antd';
-import PersonalDetails from './tabs/personal-details';
-import BusinessDetails from './tabs/business-details';
-import BankDetails from './tabs/bank-details';
+import { Tabs, Avatar, Tag, Spin } from 'antd';
 import { useSeller } from '@/hooks/useSeller';
+import { formatDate, formatISODateWithOrdinal } from '@/utils/format-date';
+
+function InfoRow({ label, value }) {
+  if (!value) return null;
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <span style={{ fontSize: '.8rem', color: '#6b7280', fontWeight: 500, flexShrink: 0, marginRight: 12 }}>{label}</span>
+      <span style={{ fontSize: '.84rem', color: '#111827', fontWeight: 500, textAlign: 'right', wordBreak: 'break-word', maxWidth: '60%' }}>{value}</span>
+    </div>
+  );
+}
+
+function Card({ title, children }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+      {title && (
+        <div style={{ padding: '12px 20px', borderBottom: '1px solid #f1f5f9' }}>
+          <p style={{ margin: 0, fontSize: '.78rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em' }}>{title}</p>
+        </div>
+      )}
+      <div style={{ padding: '4px 20px 16px' }}>{children}</div>
+    </div>
+  );
+}
+
+function DocImage({ label, src }) {
+  if (!src) return null;
+  return (
+    <div style={{ marginTop: 12 }}>
+      <p style={{ fontSize: '.78rem', color: '#6b7280', fontWeight: 600, marginBottom: 8 }}>{label}</p>
+      <img src={src} alt={label} style={{ maxWidth: 320, width: '100%', borderRadius: 8, border: '1px solid #e2e8f0', objectFit: 'cover' }} />
+    </div>
+  );
+}
+
+function PersonalTab({ d, personal }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 20, alignItems: 'start' }}>
+      <div>
+        <Card title="Personal Information">
+          <InfoRow label="Full Name"     value={`${personal.firstName || ''} ${personal.lastName || ''}`.trim()} />
+          <InfoRow label="Email"         value={personal.email} />
+          <InfoRow label="Phone"         value={personal.phoneNumber} />
+          <InfoRow label="Country"       value={personal.country} />
+          <InfoRow label="Address"       value={personal.residentialAddress} />
+          <InfoRow label="Date of Birth" value={formatISODateWithOrdinal(personal.dob)} />
+          <InfoRow label="Joined"        value={personal.joinDate ? formatDate(personal.joinDate) : null} />
+        </Card>
+        {personal.countryIdCard && (
+          <Card title="Government ID">
+            <DocImage label="ID Card" src={personal.countryIdCard} />
+          </Card>
+        )}
+      </div>
+      <div>
+        <Card title="Status">
+          <div style={{ padding: '12px 0 4px' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '4px 12px', borderRadius: 20, fontSize: '.75rem', fontWeight: 700,
+              background: personal.isVerified ? '#dcfce7' : '#fef9c3',
+              color: personal.isVerified ? '#16a34a' : '#a16207',
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: personal.isVerified ? '#16a34a' : '#a16207' }} />
+              {personal.isVerified ? 'Verified' : 'Unverified'}
+            </span>
+          </div>
+        </Card>
+        {personal.profilePicture && (
+          <Card title="Photo">
+            <img src={personal.profilePicture} alt="" style={{ width: '100%', borderRadius: 8, objectFit: 'cover', aspectRatio: '1', border: '1px solid #e2e8f0', marginTop: 4 }} />
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BusinessTab({ business }) {
+  const acct = business.accountData || {};
+  return (
+    <div>
+      <Card title="Business Information">
+        <InfoRow label="Business Name"    value={business.businessName} />
+        <InfoRow label="Business Type"    value={business.businessType} />
+        <InfoRow label="Reg. Number"      value={acct.companyRegNum} />
+        <InfoRow label="Business Address" value={acct.companyAddress} />
+        {acct.companyDescription && (
+          <div style={{ padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+            <p style={{ fontSize: '.8rem', color: '#6b7280', fontWeight: 500, marginBottom: 6 }}>Description</p>
+            <p style={{ fontSize: '.84rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>{acct.companyDescription}</p>
+          </div>
+        )}
+      </Card>
+      <Card title="Documents">
+        <DocImage label="Business Certificate" src={acct.companyCertificate} />
+        <DocImage label="Government ID"        src={business.profileImage} />
+      </Card>
+    </div>
+  );
+}
+
+function BankTab({ bank }) {
+  if (!bank || Object.keys(bank).length === 0) {
+    return <p style={{ color: '#9ca3af', fontSize: '.84rem', padding: 4 }}>No bank details on file.</p>;
+  }
+  return (
+    <Card title="Bank Details">
+      <InfoRow label="Account Name"   value={bank.accountName} />
+      <InfoRow label="Bank"           value={bank.bank} />
+      <InfoRow label="Account Number" value={bank.accountNumber} />
+    </Card>
+  );
+}
 
 export default function Seller({ sellerId }) {
-  const [activeTab, setActiveTab] = useState('personal-details');
-  const { data, isLoading, error } = useSeller(sellerId);
-  const sellerData = data?.data?.body || {};
+  const { data, isLoading } = useSeller(sellerId);
+  const d = data?.data?.body || {};
 
-  console.log(sellerData, "SELLER DATA");
+  const personal = {
+    firstName: d.firstName, lastName: d.lastName, email: d.email,
+    country: d.country, phoneNumber: d.phoneNumber,
+    joinDate: d.createdAt, dob: d.personalBusinessAccount?.dateOfBirth,
+    isVerified: d.isVerified, profilePicture: d.profilePicture,
+    residentialAddress: d.personalBusinessAccount?.residentialAddress,
+    countryIdCard: d.personalBusinessAccount?.countryIdentificationCard,
+  };
 
-  const personalDetails =
-    {
-      firstName: sellerData?.firstName,
-      lastName: sellerData?.lastName,
-      email: sellerData?.email,
-      country: sellerData?.country,
-      phoneNumber: sellerData?.phoneNumber,
-      joinDate: sellerData?.createdAt,
-      dob: sellerData?.personalBusinessAccount?.dateOfBirth,
-      isVerified: sellerData?.isVerified,
-      profilePicture: sellerData?.profilePicture,
-      sellerDetails: sellerData?.createdAt,
-      residentialAddress: sellerData?.personalBusinessAccount?.residentialAddress,
-      countryIdCard: sellerData?.personalBusinessAccount?.countryIdentificationCard
-    } || {};
+  const business = {
+    businessType: d.businessType,
+    businessName: d.businessType === 'Corporate'
+      ? d.corporateBusinessAccount?.companyName
+      : `${d.firstName || ''} ${d.lastName || ''}`.trim(),
+    accountData: d.businessType === 'Corporate'
+      ? d.corporateBusinessAccount
+      : d.personalBusinessAccount,
+    profileImage: d.profilePicture,
+  };
 
+  const bank = d.bankDetails || {};
 
-  const businessDetails =
-    {
-      businessType: sellerData?.businessType,
-      businessName:
-        sellerData?.businessType === 'Personal'
-          ? `${sellerData?.firstName} ${sellerData?.lastName} `
-          : sellerData?.businessType === 'Corporate'
-            ? sellerData?.corporateBusinessAccount?.companyName
-            : '',
-      accountData:
-        sellerData?.businessType === 'Personal'
-          ? sellerData?.personalBusinessAccount
-          : sellerData?.businessType === 'Corporate'
-            ? sellerData?.corporateBusinessAccount
-            : '',
-    } || {};
+  if (isLoading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spin size="large" /></div>;
 
-  const bankDetails = data?.data?.body?.bankDetails || {};
-
-  const items = [
-    {
-      key: '1',
-      label: 'Personal Details',
-    },
-    {
-      key: '2',
-      label: 'Business Details',
-    },
-    {
-      key: '3',
-      label: 'Bank Details',
-    },
-  ];
   return (
-    <SellerWrapper>
-        <Tabs
-          className="tabs__custom"
-          defaultActiveKey="1"
-          items={items}
-          onChange={(e) =>
-            e === '1'
-              ? setActiveTab('personal-details')
-              : e === '2'
-                ? setActiveTab('business-details')
-                : setActiveTab('bank-details')
-          }
-        />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {activeTab === 'personal-details' && (
-          <PersonalDetails personalDetails={personalDetails} />
-        )}
-        {activeTab === 'business-details' && (
-          <BusinessDetails businessDetails={businessDetails} />
-        )}
-        {activeTab === 'bank-details' && (
-          <BankDetails bankDetails={bankDetails} />
-        )}
-      </SellerWrapper>
+      {/* Profile header */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <Avatar src={d.profilePicture} size={60} style={{ background: '#f1f5f9', color: '#475569', fontSize: '1.3rem', flexShrink: 0 }}>
+          {(d.firstName || '?')[0]}
+        </Avatar>
+        <div style={{ flex: 1 }}>
+          <h2 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>
+            {`${d.firstName || ''} ${d.lastName || ''}`.trim() || '—'}
+          </h2>
+          <p style={{ margin: 0, fontSize: '.82rem', color: '#6b7280' }}>{d.email}</p>
+        </div>
+        <Tag color={d.isVerified ? 'success' : 'warning'} style={{ fontSize: '.78rem', fontWeight: 600 }}>
+          {d.isVerified ? 'Verified Seller' : 'Unverified'}
+        </Tag>
+      </div>
+
+      {/* Tabs */}
+      <Tabs
+        defaultActiveKey="personal"
+        items={[
+          { key: 'personal', label: 'Personal Details',  children: <PersonalTab  d={d} personal={personal} /> },
+          { key: 'business', label: 'Business Details',  children: <BusinessTab  business={business} /> },
+          { key: 'bank',     label: 'Bank Details',      children: <BankTab      bank={bank} /> },
+        ]}
+        style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '8px 20px 20px' }}
+      />
+    </div>
   );
 }

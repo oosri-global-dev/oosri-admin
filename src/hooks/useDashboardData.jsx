@@ -3,7 +3,7 @@ import { getDashboardOverview, getDashboardSummary } from '@/network/dashboard';
 
 const fetchDashboardData = async (period) => {
   const [overview, summary] = await Promise.all([
-       getDashboardSummary(),
+    getDashboardSummary(),
     getDashboardOverview(period),
   ]);
   return { overview, summary };
@@ -13,5 +13,7 @@ export const useDashboardData = (period = 'month') => {
   return useQuery({
     queryKey: ['dashboard-data', period],
     queryFn: () => fetchDashboardData(period),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };

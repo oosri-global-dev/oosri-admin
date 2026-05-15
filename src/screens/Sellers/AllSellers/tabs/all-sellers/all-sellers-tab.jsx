@@ -1,128 +1,77 @@
-import Picture from '@/assets/images/profile.jpg';
+import { Table, Avatar, Popover } from 'antd';
 import { HiOutlineEllipsisHorizontal as EllipsisIcon } from 'react-icons/hi2';
-import { Table, Popover, Space, Avatar } from 'antd';
-import Button from '@/components/lib/Button';
 import { formatDate } from '@/utils/format-date';
 import { useRouter } from 'next/router';
 
-const PopoverContent = ({ obj, router }) => (
-  <div className="popover__custom">
-    <Button
-      height="30px"
-      radius="5px"
-      onClick={() => {
-        console.log(obj.id, "OBJ HERE")
-        router.push(`/seller/${obj && obj?.id}`);
-      }}
-    >
-      View Seller Details
-    </Button>
-    <Button
-      height="30px"
-      radius="5px"
-      onClick={() => {
-        setDeleteId(obj);
-        setOpenModal(true);
-      }}
-    >
-      Unverify Seller
-    </Button>
-  </div>
-);
+function StatusPill({ isVerified }) {
+  return isVerified
+    ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, fontSize: '.75rem', fontWeight: 600, background: '#f0fdf4', color: '#16a34a' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a' }} />Verified</span>
+    : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, fontSize: '.75rem', fontWeight: 600, background: '#fff7ed', color: '#b45309' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />Unverified</span>;
+}
 
-export default function AllSellersTab({ sellers, loading, error }) {
-  //incase you unverify a seller later, should still be in all-sellers
+function ActionMenu({ seller, router }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 160, padding: 4 }}>
+      <button
+        onClick={() => router.push(`/seller/${seller.id}`)}
+        style={{ width: '100%', textAlign: 'left', padding: '7px 10px', borderRadius: 6, border: 'none', background: 'none', fontSize: '.82rem', color: '#374151', cursor: 'pointer', fontFamily: 'inherit' }}
+        onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+        onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+      >
+        View Seller Details
+      </button>
+    </div>
+  );
+}
+
+export default function AllSellersTab({ sellers, loading }) {
   const router = useRouter();
-  const sellersDataColumns = [
+
+  const columns = [
     {
-      title: 'Picture',
-      dataIndex: 'Picture',
-      key: 'picture',
-      render: (_) => (
-        <Space>
-          {/* item image */}
-          <Avatar size={45} src={Picture.src} />
-          <Space direction="vertical" size={1}>
-            <p>{_}</p>
-          </Space>
-        </Space>
-      ),
-    },
-    {
-      title: 'Seller Name',
-      dataIndex: 'sellerName',
-      key: 'sellerName',
+      title: 'Seller',
+      key: 'seller',
       render: (_, obj) => (
-        <Space>
-          {/* item image */}
-          {/* <Avatar size={45} src={Picture.src} /> */}
-          <Space direction="vertical" size={1}>
-            <p>
-              {obj.firstName} {obj.lastName}
-            </p>
-          </Space>
-        </Space>
-      ),
-    },
-    {
-      title: 'Email Address',
-      dataIndex: 'emailAddress',
-      key: 'emailAddress',
-      render: (_, obj) => (
-        <Space>
-          <Space direction="vertical" size={1}>
-            <p>{obj.email}</p>
-          </Space>
-        </Space>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Avatar src={obj.profilePicture} size={38} style={{ background: '#f1f5f9', color: '#475569', fontSize: '.72rem', fontWeight: 700, flexShrink: 0 }}>
+            {(obj.firstName || '?')[0]}
+          </Avatar>
+          <div>
+            <p style={{ fontSize: '.85rem', fontWeight: 600, color: '#111827', margin: 0 }}>{obj.firstName} {obj.lastName}</p>
+            <p style={{ fontSize: '.78rem', color: '#6b7280', margin: 0 }}>{obj.email}</p>
+          </div>
+        </div>
       ),
     },
     {
       title: 'Country',
       dataIndex: 'country',
       key: 'country',
+      render: (v) => v || <span style={{ color: '#9ca3af' }}>—</span>,
     },
-    // {
-    //   title: "Phone Number",
-    //   dataIndex: "phoneNumber",
-    //   key: "phoneNumber",
-    // },
     {
-      title: 'Registration Date',
-      dataIndex: 'registrationDate',
-      key: 'registrationDate',
-      render: (_, obj) => {
-        console.log(obj);
-        <Space>
-          <Space direction="vertical" size={1}>
-            <p>{formatDate(obj?.createdAt)}</p>
-          </Space>
-        </Space>;
-      },
+      title: 'Joined',
+      key: 'joined',
+      render: (_, obj) => formatDate(obj.createdAt) || '—',
     },
     {
       title: 'Status',
-      dataIndex: 'status',
       key: 'status',
-      render: (_, obj) => (
-        <Space size="middle">
-          {obj?.isVerified === true ? (
-            <p className="verified__text">{'Verified'}</p>
-          ) : (
-            <p className="unverified__text">{'Unverified'}</p>
-          )}
-        </Space>
-      ),
+      render: (_, obj) => <StatusPill isVerified={obj.isVerified} />,
     },
     {
       title: '',
-      dataIndex: 'action',
       key: 'action',
+      width: 48,
       render: (_, obj) => (
-        <Popover
-          content={<PopoverContent obj={obj} router={router} />}
-          trigger="click"
-        >
-          <EllipsisIcon style={{ cursor: 'pointer' }} />
+        <Popover content={<ActionMenu seller={obj} router={router} />} trigger="click" placement="bottomRight">
+          <button
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, color: '#9ca3af' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+          >
+            <EllipsisIcon size={18} />
+          </button>
         </Popover>
       ),
     },
@@ -130,10 +79,12 @@ export default function AllSellersTab({ sellers, loading, error }) {
 
   return (
     <Table
-      columns={sellersDataColumns}
+      columns={columns}
       dataSource={sellers}
+      rowKey="id"
       loading={loading}
-      className="table__class"
+      pagination={{ pageSize: 10, showSizeChanger: false }}
+      locale={{ emptyText: 'No sellers found' }}
     />
   );
 }

@@ -23,7 +23,6 @@ export const useSellers = (searchTerm = '', options = {}) => {
 
         do {
           const res = await getSellers(currentPage);
-          console.log('SELLERS RESPONSE', res.data?.body?.sellers);
           const sellers = res.data?.body?.sellers || [];
           const meta = res.data.meta || {};
 
@@ -39,7 +38,7 @@ export const useSellers = (searchTerm = '', options = {}) => {
       const res = await getSellers(1);
       return { sellers: res.data.sellers || [] };
     },
-    keepPreviousData: true,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 };

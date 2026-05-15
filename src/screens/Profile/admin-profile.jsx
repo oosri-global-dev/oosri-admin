@@ -1,186 +1,226 @@
-import { SellersProfileWrapper } from './seller-profile.styles';
-import { Tabs, Form, Input } from 'antd';
-import { useState, useContext, useEffect } from 'react';
-import TextField from '@/components/lib/TextField';
-import { FlexibleDiv } from '@/components/lib/Box/styles';
-import Button from '@/components/lib/Button';
-import useNotification from '@/hooks/useNotification';
-import { CustomUpload } from '@/components/lib/CustomUpload';
+import { useState, useContext, useRef } from 'react';
+import { Form, Input, Spin, message } from 'antd';
+import { MdCameraAlt, MdEdit, MdSave, MdClose } from 'react-icons/md';
 import { MainContext } from '@/context';
 import { updateProfileData, UpdateProfilePicture } from '@/network/profile';
+import useNotification from '@/hooks/useNotification';
+
+function initials(name = '') {
+  return name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || '?';
+}
+
+function InfoCard({ title, children }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 24px', borderBottom: '1px solid #f1f5f9' }}>
+        <p style={{ margin: 0, fontSize: '.78rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em' }}>{title}</p>
+      </div>
+      <div style={{ padding: '20px 24px' }}>{children}</div>
+    </div>
+  );
+}
+
+function FieldRow({ label, children }) {
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#374151', marginBottom: 6 }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const STATIC_STYLE = {
+  display: 'flex', alignItems: 'center', height: 40,
+  padding: '0 12px', background: '#f8fafc',
+  border: '1px solid #e2e8f0', borderRadius: 8,
+  fontSize: '.84rem', color: '#374151',
+};
 
 export default function AdminProfile() {
-  const [file, setFile] = useState(null);
-  const [activeTab, setActiveTab] = useState('1');
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [editMode, setEditMode]     = useState(false);
+  const [saving, setSaving]         = useState(false);
+  const [uploading, setUploading]   = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [pendingFile, setPendingFile] = useState(null);
+  const fileInputRef = useRef(null);
   const [success, error] = useNotification();
-  const {
-    state: { user },
-    dispatch,
-  } = useContext(MainContext);
+  const { state: { user }, dispatch } = useContext(MainContext);
+  const [form] = Form.useForm();
 
-  console.log(user, 'ORIGINAL USER');
-
-  const [profileData, setProfileData] = useState({
-    fullName: user?.fullName || '',
-    email: user?.email || '',
-    phoneNumber: user?.phoneNumber || '',
-  });
-
-  useEffect(() => {
-    if (user) {
-      setProfileData({
-        fullName: user.fullName,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-      });
-    }
-  }, [user]);
-
-  const handleDataUpdate = async (payload) => {
-    try {
-      const data = await updateProfileData(payload);
-      return data;
-    } catch (errors) {
-      throw errors;
-    }
+  const handleAvatarClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
-  const handleImageUpload = async () => {
-    try {
-      const response = await UpdateProfilePicture({ profilePicture: file });
-      const updatedImage = response?.data?.data?.body?.profileImage;
-
-      if (updatedImage) {
-        dispatch({
-          type: 'UPDATE_USER',
-          payload: { profileImage: updatedImage },
-        });
-        success('Profile picture updated.');
-      }
-
-      setFile(null);
-      return response;
-    } catch (errors) {
-      error('Failed to upload profile picture.');
-      console.error(errors);
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+      message.error('JPG or PNG only');
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      message.error('Max 5 MB');
+      return;
+    }
+    setPendingFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleSubmit = async () => {
-    setIsLoading(true);
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      if (file) {
-        await handleImageUpload();
+      const values = form.getFieldsValue();
+
+      if (pendingFile) {
+        setUploading(true);
+        const res = await UpdateProfilePicture({ profilePicture: pendingFile });
+        const updatedImage = res?.data?.data?.body?.profileImage;
+        if (updatedImage) dispatch({ type: 'UPDATE_USER', payload: { profileImage: updatedImage } });
+        setPendingFile(null);
+        setPreviewUrl(null);
+        setUploading(false);
       }
 
-      const payload = { phoneNumber: profileData.phoneNumber };
-      await handleDataUpdate(payload);
+      if (values.phoneNumber !== user?.phoneNumber) {
+        await updateProfileData({ phoneNumber: values.phoneNumber });
+        dispatch({ type: 'UPDATE_USER', payload: { phoneNumber: values.phoneNumber } });
+      }
 
-      dispatch({
-        type: 'UPDATE_USER',
-        payload: { phoneNumber: profileData.phoneNumber },
-      });
-
-      success('Profile updated successfully.');
-      setIsEditMode(false);
+      success('Profile updated successfully');
+      setEditMode(false);
     } catch (err) {
-      error('An error occurred while saving your details.');
-      console.error(err);
+      error('Failed to save profile');
     } finally {
-      setIsLoading(false);
+      setSaving(false);
+      setUploading(false);
     }
   };
 
-  const handlePhoneNumberChange = (e) => {
-    setProfileData((prev) => ({
-      ...prev,
-      phoneNumber: e.target.value,
-    }));
+  const handleCancel = () => {
+    setEditMode(false);
+    setPendingFile(null);
+    setPreviewUrl(null);
+    form.setFieldsValue({ phoneNumber: user?.phoneNumber || '' });
   };
+
+  const avatarSrc = previewUrl || user?.profileImage;
 
   return (
-    <SellersProfileWrapper>
-        <Tabs
-          className="tabs__custom"
-          defaultActiveKey="1"
-          items={[{ key: '1', label: 'Personal Details' }]}
-          onChange={(e) => {
-            setActiveTab(e);
-          }}
-        />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 780 }}>
 
-        {activeTab === '1' && (
-          <FlexibleDiv className="profile__details__section">
-            <FlexibleDiv className="profile__info__wrapper">
-              <h2>Personal Information</h2>
-              <FlexibleDiv className="info_cont">
-                <FlexibleDiv className="info__inner_cont1" flexDir="row">
-                  <FlexibleDiv className="info1" flexDir="column">
-                    <p>Full Legal Name</p>
-                    <TextField
-                      name="fullName"
-                      placeholder="Full Name"
-                      value={profileData.fullName}
-                      disabled
-                    />
-                  </FlexibleDiv>
-                </FlexibleDiv>
-                <FlexibleDiv className="info__inner_cont2">
-                  <FlexibleDiv className="info1">
-                    <p>Email Address</p>
-                    <TextField
-                      name="email"
-                      placeholder="Email"
-                      value={profileData.email}
-                      disabled
-                    />
-                  </FlexibleDiv>
-                  <FlexibleDiv className="info2">
-                    <p>Phone Number</p>
-                    {isEditMode ? (
-                      <Input
-                        name="phoneNumber"
-                        value={profileData.phoneNumber}
-                        onChange={handlePhoneNumberChange}
-                      />
-                    ) : (
-                      <p>{profileData.phoneNumber}</p>
-                    )}
-                  </FlexibleDiv>
-                </FlexibleDiv>
-              </FlexibleDiv>
-            </FlexibleDiv>
+      {/* Profile hero */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '28px 32px', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
 
-            <FlexibleDiv
-              className="profile__image__wrapper"
-              flexDir="column"
-              gap="29px"
-            >
-              <CustomUpload
-                setFile={setFile}
-                editable={isEditMode}
-                initialImage={user?.profileImage}
-              />
-
-              <Button
-                onClick={() => {
-                  isEditMode ? handleSubmit() : setIsEditMode(true);
+        {/* Avatar */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <div style={{
+            width: 88, height: 88, borderRadius: '50%', overflow: 'hidden',
+            background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '3px solid #e2e8f0', position: 'relative',
+          }}>
+            {uploading
+              ? <Spin />
+              : avatarSrc
+                ? <img src={avatarSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#9ca3af' }}>{initials(user?.fullName)}</span>
+            }
+          </div>
+          {editMode && (
+            <>
+              <button
+                onClick={handleAvatarClick}
+                style={{
+                  position: 'absolute', bottom: 0, right: 0,
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: 'var(--oosriPrimary)', color: '#fff',
+                  border: '2px solid #fff', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
-                width="50%"
-                radius="8px"
-                color="var(--oosriWhite)"
-                backgroundColor="var(--oosriPrimary)"
-                className="submit__btn"
-                htmlType="submit"
-                loading={isLoading}
               >
-                {isEditMode ? 'Save Details' : 'Edit Details'}
-              </Button>
-            </FlexibleDiv>
-          </FlexibleDiv>
-        )}
-      </SellersProfileWrapper>
+                <MdCameraAlt size={14} />
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png" style={{ display: 'none' }} onChange={handleFileChange} />
+            </>
+          )}
+        </div>
+
+        {/* Name & role */}
+        <div style={{ flex: 1, minWidth: 180 }}>
+          <h2 style={{ margin: '0 0 4px', fontSize: '1.2rem', fontWeight: 700, color: '#111827' }}>{user?.fullName || '—'}</h2>
+          <p style={{ margin: '0 0 8px', fontSize: '.84rem', color: '#6b7280' }}>{user?.email}</p>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, background: '#eff6ff', color: '#1d4ed8', fontSize: '.73rem', fontWeight: 700 }}>
+            Administrator
+          </span>
+        </div>
+
+        {/* Edit / Save / Cancel */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          {editMode ? (
+            <>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 16px', background: 'var(--oosriPrimary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: '.84rem', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? .65 : 1, fontFamily: 'inherit' }}
+              >
+                <MdSave size={16} />{saving ? 'Saving…' : 'Save'}
+              </button>
+              <button
+                onClick={handleCancel}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px', background: '#f1f5f9', color: '#374151', border: 'none', borderRadius: 8, fontSize: '.84rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <MdClose size={16} />Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => { setEditMode(true); form.setFieldsValue({ phoneNumber: user?.phoneNumber || '' }); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 16px', background: '#f1f5f9', color: '#374151', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '.84rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              <MdEdit size={16} />Edit Profile
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Details card */}
+      <Form form={form} layout="vertical" initialValues={{ phoneNumber: user?.phoneNumber || '' }}>
+        <InfoCard title="Account Information">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+
+            <FieldRow label="Full Name">
+              <div style={STATIC_STYLE}>{user?.fullName || '—'}</div>
+            </FieldRow>
+
+            <FieldRow label="Email Address">
+              <div style={STATIC_STYLE}>{user?.email || '—'}</div>
+            </FieldRow>
+
+            <FieldRow label="Phone Number">
+              {editMode
+                ? <Form.Item name="phoneNumber" style={{ margin: 0 }}>
+                    <Input style={{ height: 40 }} placeholder="+234..." />
+                  </Form.Item>
+                : <div style={STATIC_STYLE}>{user?.phoneNumber || '—'}</div>
+              }
+            </FieldRow>
+
+            <FieldRow label="Role">
+              <div style={STATIC_STYLE}>Administrator</div>
+            </FieldRow>
+
+          </div>
+        </InfoCard>
+      </Form>
+
+      {/* Security note */}
+      <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '14px 20px', display: 'flex', gap: 10 }}>
+        <span style={{ fontSize: '1rem', flexShrink: 0 }}>🔒</span>
+        <p style={{ margin: 0, fontSize: '.82rem', color: '#92400e', lineHeight: 1.55 }}>
+          Your name and email are managed by the platform. To change them, contact a super-admin.
+          Only your phone number and profile picture can be updated here.
+        </p>
+      </div>
+
+    </div>
   );
 }

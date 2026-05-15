@@ -107,34 +107,41 @@ export default function PayoutsScreen() {
 
   return (
     <PayoutsWrapper>
-      <div className="toolbar">
-        <div className="filter__tabs">
-          {STATUS_FILTERS.map(({ key, label }) => (
-            <button
-              key={key}
-              className={statusFilter === key ? "active" : ""}
-              onClick={() => { setStatus(key); setPage(1); }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="page__header">
+        <h2 className="page__title">Payouts</h2>
+        <p className="page__sub">Review and manage seller payout requests.</p>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={payouts}
-        rowKey={(row) => row.id || row._id}
-        loading={isLoading || approving || rejecting}
-        pagination={{
-          current: page,
-          pageSize: 20,
-          total,
-          showSizeChanger: false,
-          onChange: setPage,
-        }}
-        locale={{ emptyText: "No payouts found" }}
-      />
+      <div className="table__card">
+        <div className="toolbar">
+          <div className="filter__tabs">
+            {STATUS_FILTERS.map(({ key, label }) => (
+              <button
+                key={key}
+                className={statusFilter === key ? "active" : ""}
+                onClick={() => { setStatus(key); setPage(1); }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Table
+          columns={columns}
+          dataSource={payouts}
+          rowKey={(row) => row.id || row._id}
+          loading={isLoading || approving || rejecting}
+          pagination={{
+            current: page,
+            pageSize: 20,
+            total,
+            showSizeChanger: false,
+            onChange: setPage,
+          }}
+          locale={{ emptyText: "No payouts found" }}
+        />
+      </div>
     </PayoutsWrapper>
   );
 }

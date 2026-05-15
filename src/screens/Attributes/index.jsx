@@ -1,283 +1,247 @@
 import { useState, useEffect } from 'react';
-import { Table, Space, Popover, message, Modal, Form, Input, Select, Tag } from 'antd';
+import { Table, Popover, message, Modal, Form, Input, Select, Tag } from 'antd';
 import { IoSearchOutline as SearchIcon } from 'react-icons/io5';
 import { HiOutlineEllipsisHorizontal as EllipsisIcon } from 'react-icons/hi2';
 import { PlusOutlined } from '@ant-design/icons';
 import { AllCategoriesWrapper as AttributesWrapper } from '../Categories/AllCategories/all-categories.styles';
-import { FlexibleDiv } from '@/components/lib/Box/styles';
-import Button from '@/components/lib/Button';
-import TextField from '@/components/lib/TextField';
 import { getAttributes, createAttribute, updateAttribute, deleteAttribute } from '@/network/attribute';
 
 const { Option } = Select;
 
+function ActionMenu({ record, onEdit, onDelete }) {
+  return (
+    <div className="action__menu">
+      <button onClick={onEdit}>Edit</button>
+      <button className="danger" onClick={onDelete}>Delete</button>
+    </div>
+  );
+}
+
 export default function AttributesScreen() {
-    const [attributes, setAttributes] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingAttribute, setEditingAttribute] = useState(null);
-    const [form] = Form.useForm();
-    const [attributeType, setAttributeType] = useState('text');
+  const [attributes,        setAttributes]        = useState([]);
+  const [loading,           setLoading]           = useState(false);
+  const [searchTerm,        setSearchTerm]        = useState('');
+  const [isModalOpen,       setIsModalOpen]       = useState(false);
+  const [editingAttribute,  setEditingAttribute]  = useState(null);
+  const [attributeType,     setAttributeType]     = useState('text');
+  const [form] = Form.useForm();
 
-    const fetchAttributes = async () => {
-        setLoading(true);
-        try {
-            const response = await getAttributes();
-            if (response?.data?.success) {
-                setAttributes(response.data.data);
-            }
-        } catch (error) {
-            message.error('Failed to fetch attributes');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchAttributes = async () => {
+    setLoading(true);
+    try {
+      const res = await getAttributes();
+      if (res?.data?.success) setAttributes(res.data.data);
+    } catch {
+      message.error('Failed to fetch attributes');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-        fetchAttributes();
-    }, []);
+  useEffect(() => { fetchAttributes(); }, []);
 
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-    };
+  const filtered = attributes.filter((a) =>
+    a.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    const filteredAttributes = attributes.filter(attr =>
-        attr.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        attr.code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const openEdit = (record) => {
+    setEditingAttribute(record);
+    setAttributeType(record.type);
+    form.setFieldsValue(record);
+    setIsModalOpen(true);
+  };
 
-    const handleCreateOrUpdate = async (values) => {
-        try {
-            if (editingAttribute) {
-                await updateAttribute(editingAttribute._id, values);
-                message.success('Attribute updated successfully');
-            } else {
-                await createAttribute(values);
-                message.success('Attribute created successfully');
-            }
-            setIsModalOpen(false);
-            form.resetFields();
-            setEditingAttribute(null);
-            fetchAttributes();
-        } catch (error) {
-            message.error(error.response?.data?.message || 'Operation failed');
-        }
-    };
+  const openCreate = () => {
+    setEditingAttribute(null);
+    setAttributeType('text');
+    form.resetFields();
+    form.setFieldsValue({ type: 'text', isRequired: false });
+    setIsModalOpen(true);
+  };
 
-    const handleDelete = async (id) => {
-        try {
-            await deleteAttribute(id);
-            message.success('Attribute deleted successfully');
-            fetchAttributes();
-        } catch (error) {
-            message.error('Failed to delete attribute');
-        }
-    };
+  const handleSubmit = async (values) => {
+    try {
+      if (editingAttribute) {
+        await updateAttribute(editingAttribute._id, values);
+        message.success('Attribute updated');
+      } else {
+        await createAttribute(values);
+        message.success('Attribute created');
+      }
+      setIsModalOpen(false);
+      form.resetFields();
+      setEditingAttribute(null);
+      fetchAttributes();
+    } catch (err) {
+      message.error(err.response?.data?.message || 'Operation failed');
+    }
+  };
 
-    const columns = [
-        {
-            title: 'Label',
-            dataIndex: 'label',
-            key: 'label',
-            render: (text, record) => (
-                <div>
-                    <div style={{ fontWeight: 600 }}>{text}</div>
-                    <div style={{ fontSize: '12px', color: '#888' }}>{record.code}</div>
-                </div>
-            )
-        },
-        {
-            title: 'Type',
-            dataIndex: 'type',
-            key: 'type',
-            render: (type) => <Tag color="blue">{type.toUpperCase()}</Tag>
-        },
-        {
-            title: 'Required',
-            dataIndex: 'isRequired',
-            key: 'isRequired',
-            render: (required) => required ? <Tag color="red">YES</Tag> : <Tag color="default">NO</Tag>
-        },
-        {
-            title: 'Options',
-            dataIndex: 'options',
-            key: 'options',
-            render: (options) => options?.length > 0 ? (
-                <div style={{ maxWidth: '200px' }}>
-                    {options.map(opt => <Tag key={opt} style={{ marginBottom: '4px' }}>{opt}</Tag>)}
-                </div>
-            ) : '-'
-        },
-        {
-            title: 'Action',
-            key: 'action',
-            render: (_, record) => (
-                <Popover
-                    content={
-                        <div className="popover__custom" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <Button
-                                height="30px"
-                                radius="5px"
-                                width="100%"
-                                onClick={() => {
-                                    setEditingAttribute(record);
-                                    setAttributeType(record.type);
-                                    form.setFieldsValue(record);
-                                    setIsModalOpen(true);
-                                }}
-                            >
-                                Edit
-                            </Button>
-                            <Button
-                                height="30px"
-                                radius="5px"
-                                width="100%"
-                                onClick={() => handleDelete(record._id)}
-                                style={{ color: 'red' }}
-                            >
-                                Delete
-                            </Button>
-                        </div>
-                    }
-                    trigger="click"
-                >
-                    <EllipsisIcon style={{ cursor: 'pointer' }} />
-                </Popover>
-            ),
-        },
-    ];
+  const handleDelete = async (id) => {
+    try {
+      await deleteAttribute(id);
+      message.success('Attribute deleted');
+      fetchAttributes();
+    } catch {
+      message.error('Failed to delete attribute');
+    }
+  };
 
-    return (
-        <AttributesWrapper>
-                <FlexibleDiv flexDir="column" className="categories__table__section">
-                    <FlexibleDiv flexDir="row" justifyContent="space-between" className="search__body__section" width="100%">
-                        <FlexibleDiv className="search__section" flexDir="row" flexWrap="nowrap">
-                            <SearchIcon size={18} color="#9E9E9E" />
-                            <TextField
-                                placeholder="Search attributes"
-                                value={searchTerm}
-                                onChange={handleSearchChange}
-                                className="text__field__custom"
-                            />
-                        </FlexibleDiv>
-                        <Button
-                            onClick={() => {
-                                setEditingAttribute(null);
-                                setAttributeType('text');
-                                form.resetFields();
-                                form.setFieldsValue({ type: 'text', isRequired: false });
-                                setIsModalOpen(true);
-                            }}
-                            startIcon={<PlusOutlined />}
-                            bg="var(--oosriPrimary)"
-                            color="#fff"
-                        >
-                            Add Attribute
-                        </Button>
-                    </FlexibleDiv>
+  const columns = [
+    {
+      title: 'Label',
+      dataIndex: 'label',
+      key: 'label',
+      render: (text, record) => (
+        <div>
+          <p className="cat__name">{text}</p>
+          <p className="cat__desc">{record.code}</p>
+        </div>
+      ),
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
+      render: (v) => <Tag color="blue">{(v || '').toUpperCase()}</Tag>,
+    },
+    {
+      title: 'Required',
+      dataIndex: 'isRequired',
+      key: 'required',
+      render: (v) => (
+        <span style={{
+          display: 'inline-block', padding: '2px 10px', borderRadius: 20,
+          fontSize: '.73rem', fontWeight: 700,
+          background: v ? '#fee2e2' : '#f1f5f9',
+          color: v ? '#dc2626' : '#475569',
+        }}>
+          {v ? 'Required' : 'Optional'}
+        </span>
+      ),
+    },
+    {
+      title: 'Options',
+      dataIndex: 'options',
+      key: 'options',
+      render: (opts) => opts?.length
+        ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>{opts.map((o) => <Tag key={o}>{o}</Tag>)}</div>
+        : <span className="cat__desc">—</span>,
+    },
+    {
+      title: '',
+      key: 'action',
+      width: 48,
+      render: (_, record) => (
+        <Popover
+          content={
+            <ActionMenu
+              record={record}
+              onEdit={() => openEdit(record)}
+              onDelete={() => handleDelete(record._id)}
+            />
+          }
+          trigger="click"
+          placement="bottomRight"
+        >
+          <button style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, color: '#9ca3af' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+          >
+            <EllipsisIcon size={18} />
+          </button>
+        </Popover>
+      ),
+    },
+  ];
 
-                    <div className="categories__table__wrapper">
-                        <Table
-                            columns={columns}
-                            dataSource={filteredAttributes}
-                            rowKey="_id"
-                            loading={loading}
-                        />
-                    </div>
-                </FlexibleDiv>
+  return (
+    <AttributesWrapper>
+      <div className="categories__table__section">
+        <div className="search__body__section">
+          <div className="search__section">
+            <SearchIcon size={16} color="#9ca3af" />
+            <input
+              placeholder="Search attributes…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="text__field__custom"
+            />
+          </div>
+          <button className="add__btn" onClick={openCreate}>
+            <PlusOutlined /> Add Attribute
+          </button>
+        </div>
 
-                <Modal
-                    title={editingAttribute ? "Edit Attribute" : "Add Attribute"}
-                    open={isModalOpen}
-                    onCancel={() => setIsModalOpen(false)}
-                    footer={null}
-                    width={600}
-                >
-                    <Form
-                        form={form}
-                        layout="vertical"
-                        onFinish={handleCreateOrUpdate}
-                        initialValues={{ type: 'text', isRequired: false }}
-                        style={{ marginTop: '20px' }}
-                    >
-                        <FlexibleDiv gap="20px">
-                            <Form.Item
-                                name="label"
-                                label="Label (e.g. Fabric Material)"
-                                rules={[{ required: true, message: 'Required' }]}
-                                style={{ flex: 1 }}
-                            >
-                                <Input placeholder="Attribute Label" height="40px" />
-                            </Form.Item>
-                            <Form.Item
-                                name="code"
-                                label="Code (Unique identifier)"
-                                rules={[{ required: true, message: 'Required' }]}
-                                style={{ flex: 1 }}
-                            >
-                                <Input placeholder="attribute_code" height="40px" disabled={!!editingAttribute} />
-                            </Form.Item>
-                        </FlexibleDiv>
+        <Table
+          columns={columns}
+          dataSource={filtered}
+          rowKey="_id"
+          loading={loading}
+          pagination={{ pageSize: 15, showSizeChanger: false }}
+          locale={{ emptyText: 'No attributes found' }}
+        />
+      </div>
 
-                        <FlexibleDiv gap="20px">
-                            <Form.Item
-                                name="type"
-                                label="Input Type"
-                                rules={[{ required: true }]}
-                                style={{ flex: 1 }}
-                            >
-                                <Select onChange={val => setAttributeType(val)}>
-                                    <Option value="text">Text</Option>
-                                    <Option value="number">Number</Option>
-                                    <Option value="select">Select</Option>
-                                    <Option value="multiselect">Multi-Select</Option>
-                                    <Option value="boolean">Boolean (Yes/No)</Option>
-                                    <Option value="date">Date</Option>
-                                    <Option value="rich_text">Rich Text</Option>
-                                </Select>
-                            </Form.Item>
-                            <Form.Item
-                                name="isRequired"
-                                label="Global Requirement"
-                                valuePropName="checked"
-                                style={{ flex: 1 }}
-                            >
-                                <Select>
-                                    <Option value={true}>Mandatory</Option>
-                                    <Option value={false}>Optional</Option>
-                                </Select>
-                            </Form.Item>
-                        </FlexibleDiv>
+      <Modal
+        title={editingAttribute ? 'Edit Attribute' : 'Add Attribute'}
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+        width={560}
+        styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
+      >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}
+          initialValues={{ type: 'text', isRequired: false }}
+          style={{ marginTop: 20 }}
+        >
+          <div style={{ display: 'flex', gap: 16 }}>
+            <Form.Item name="label" label="Label" rules={[{ required: true, message: 'Required' }]} style={{ flex: 1, marginBottom: 16 }}>
+              <Input style={{ height: 40 }} placeholder="e.g. Fabric Material" />
+            </Form.Item>
+            <Form.Item name="code" label="Code (unique)" rules={[{ required: true, message: 'Required' }]} style={{ flex: 1, marginBottom: 16 }}>
+              <Input style={{ height: 40 }} placeholder="fabric_material" disabled={!!editingAttribute} />
+            </Form.Item>
+          </div>
 
-                        {['select', 'multiselect'].includes(attributeType) && (
-                            <Form.Item
-                                name="options"
-                                label="Select Options (Press Enter to add)"
-                                rules={[{ required: true, message: 'At least one option required' }]}
-                            >
-                                <Select mode="tags" style={{ width: '100%' }} placeholder="Add options..." />
-                            </Form.Item>
-                        )}
+          <div style={{ display: 'flex', gap: 16 }}>
+            <Form.Item name="type" label="Input Type" rules={[{ required: true }]} style={{ flex: 1, marginBottom: 16 }}>
+              <Select style={{ height: 40 }} onChange={(v) => setAttributeType(v)}>
+                <Option value="text">Text</Option>
+                <Option value="number">Number</Option>
+                <Option value="select">Select</Option>
+                <Option value="multiselect">Multi-Select</Option>
+                <Option value="boolean">Boolean (Yes/No)</Option>
+                <Option value="date">Date</Option>
+                <Option value="rich_text">Rich Text</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="isRequired" label="Requirement" style={{ flex: 1, marginBottom: 16 }}>
+              <Select style={{ height: 40 }}>
+                <Option value={true}>Mandatory</Option>
+                <Option value={false}>Optional</Option>
+              </Select>
+            </Form.Item>
+          </div>
 
-                        <Form.Item name="description" label="Description">
-                            <Input.TextArea rows={3} placeholder="Explain what this attribute is for..." />
-                        </Form.Item>
+          {['select', 'multiselect'].includes(attributeType) && (
+            <Form.Item name="options" label="Options (press Enter to add)" rules={[{ required: true, message: 'Add at least one option' }]}>
+              <Select mode="tags" style={{ width: '100%' }} placeholder="Add options…" />
+            </Form.Item>
+          )}
 
-                        <Form.Item style={{ marginTop: '20px' }}>
-                            <Button
-                                type="primary"
-                                htmlType="submit"
-                                width="100%"
-                                bg="var(--oosriPrimary)"
-                                color="#fff"
-                                height="40px"
-                            >
-                                {editingAttribute ? "Update Attribute" : "Create Attribute"}
-                            </Button>
-                        </Form.Item>
-                    </Form>
-                </Modal>
-            </AttributesWrapper>
-    );
+          <Form.Item name="description" label="Description">
+            <Input.TextArea rows={3} placeholder="What is this attribute used for?" />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0 }}>
+            <button type="submit" className="submit__btn">
+              {editingAttribute ? 'Update Attribute' : 'Create Attribute'}
+            </button>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </AttributesWrapper>
+  );
 }

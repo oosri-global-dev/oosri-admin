@@ -1,309 +1,175 @@
-'use client';
-
-import { Space, Select, message } from 'antd';
-import { OrderDetailsWrapper } from './index.styles';
-import { FlexibleDiv } from '@/components/lib/Box/styles';
-import Picture from '@/assets/images/profile.jpg';
-import LeastPhoto from '@/assets/images/leastSellingProduct.png';
-import CustomLoader from '@/components/lib/CustomLoader';
-import { useMainContext } from '@/context';
+import { Select, Spin, message, Avatar } from 'antd';
 import { useUpdateOrderStatus } from '@/hooks/useUpdateOrderStatus';
+import styled from 'styled-components';
+
+const STATUS_OPTIONS = [
+  { value: 'pending',    label: 'Pending'    },
+  { value: 'processing', label: 'Processing' },
+  { value: 'completed',  label: 'Completed'  },
+  { value: 'canceled',   label: 'Canceled'   },
+  { value: 'on-hold',    label: 'On Hold'    },
+];
+
+const STATUS_COLORS = {
+  completed:  { bg: '#dcfce7', color: '#16a34a' },
+  processing: { bg: '#fef9c3', color: '#a16207' },
+  pending:    { bg: '#fff7ed', color: '#c2410c' },
+  'on-hold':  { bg: '#eff6ff', color: '#1d4ed8' },
+  canceled:   { bg: '#fee2e2', color: '#dc2626' },
+};
+
+function StatusPill({ status }) {
+  const s = (status || '').toLowerCase();
+  const { bg = '#f1f5f9', color = '#475569' } = STATUS_COLORS[s] || {};
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 20, background: bg, color, fontSize: '.75rem', fontWeight: 700 }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
+      {status || '—'}
+    </span>
+  );
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <span style={{ fontSize: '.8rem', color: '#6b7280', fontWeight: 500, flexShrink: 0, marginRight: 16 }}>{label}</span>
+      <span style={{ fontSize: '.84rem', color: '#111827', fontWeight: 500, textAlign: 'right' }}>{value || '—'}</span>
+    </div>
+  );
+}
+
+function Card({ title, children, style }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', ...style }}>
+      {title && (
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9' }}>
+          <p style={{ margin: 0, fontSize: '.85rem', fontWeight: 700, color: '#111827', textTransform: 'uppercase', letterSpacing: '.04em' }}>{title}</p>
+        </div>
+      )}
+      <div style={{ padding: '8px 20px 16px' }}>{children}</div>
+    </div>
+  );
+}
 
 export default function OrderDetails({ data, isLoading }) {
-  const { state } = useMainContext();
-  const currentCurrency = state.currency || 'NGN';
-
   const orderId = data?.orderId;
   const { mutate: changeStatus, isLoading: isUpdating } = useUpdateOrderStatus(orderId);
 
   const handleStatusChange = (newStatus) => {
     changeStatus(newStatus, {
-      onSuccess: () => {
-        message.success(`Order status updated to "${newStatus}" successfully`);
-      },
-      onError: (err) => {
-        message.error(err?.response?.data?.message || 'Failed to update order status. Please try again.');
-      },
+      onSuccess: () => message.success(`Status updated to "${newStatus}"`),
+      onError:   (err) => message.error(err?.response?.data?.message || 'Failed to update status'),
     });
   };
 
-  const ORDER_STATUS_OPTIONS = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'processing', label: 'Processing' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'canceled', label: 'Canceled' },
-    { value: 'on-hold', label: 'On Hold' },
-  ];
+  if (isLoading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spin size="large" /></div>;
+  }
 
-  const displayAmount = (amtNGN, amtUSD, formattedNGN, formattedUSD) => {
-    return currentCurrency === 'USD' ? formattedUSD : formattedNGN;
-  };
+  if (!data) {
+    return <div style={{ padding: 40, color: '#dc2626', textAlign: 'center' }}>Order not found.</div>;
+  }
 
-  const totalAmountFormatted = displayAmount(
-    data?.totalAmountNGN,
-    data?.totalAmountUSD,
-    data?.formattedAmountNGN,
-    data?.formattedAmountUSD
-  );
+  const products = data?.products || [];
 
-  const deliveryFeeFormatted = currentCurrency === 'USD'
-    ? (data?.formattedAmountUSD ? '$0.00' : '$0.00') // Backend doesn't return deliveryFeeUSD currently, but we can assume or add it
-    : data?.formattedDeliveryFeeNGN || '₦0';
   return (
-    <>
-      {isLoading ? <CustomLoader /> : null}
-      <OrderDetailsWrapper>
-        <FlexibleDiv
-          gap="14px"
-          flexWrap="noWrap"
-          justifyContent="start"
-          className="profile__section"
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+      {/* Header card */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <Avatar
+          src={data?.customerProfileImage}
+          size={56}
+          style={{ background: '#f1f5f9', color: '#475569', fontSize: '1.2rem', flexShrink: 0 }}
         >
-          <img src={data?.customerProfileImage} alt="profile-picture" />
-          <FlexibleDiv
-            flexDir="column"
-            flexWrap="noWrap"
-            alignItems="start"
-            gap="3px"
-          >
-            <h5>{data?.customerFullName}</h5>
-            <p>Order Id: {data?.orderId}</p>
-          </FlexibleDiv>
-        </FlexibleDiv>
-        {/* Item Info */}
-        <FlexibleDiv className="item__info" justifyContent="space-between">
-          <div className="absolute__item">
-            <img src={data?.products[0]?.productImage[0]} alt="gadget image" />
-            <p>{data?.sellerFullName}</p>
-          </div>
-          <FlexibleDiv justifyContent="start" gap="32px" width="fit-content">
-            <img src={data?.products[0]?.productImage[1]} alt="Item photo" />
-            <FlexibleDiv
-              flexDir="column"
-              flexWrap="noWrap"
-              alignItems="start"
-              gap="10px"
-              width="fit-content"
-            >
-              <h2>{data?.products[0]?.productName}</h2>
-              <p className="strike__through">
-                {currentCurrency === 'USD' ? data?.products[0]?.formattedProductAmountUSD : data?.products[0]?.formattedProductAmountNGN}
-                {/* Fallback for backward compatibility */}
-                {!data?.products[0]?.formattedProductAmountNGN && data?.products[0]?.productAmount}
-              </p>
-              <p>Product Id: {data?.products[0]?.productId}</p>
-            </FlexibleDiv>
-          </FlexibleDiv>
-          {/* <h5>₦50,000</h5> */}
-        </FlexibleDiv>
-        <FlexibleDiv justifyContent="start" style={{ columnGap: '50px' }}>
-          {/* Delivery item 1 */}
-          <FlexibleDiv
-            className="delivery__item"
-            gap="12px"
-            alignItems="start"
-            width="fit-content"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12.0017 14H13.0017C14.1017 14 15.0017 13.1 15.0017 12V2H6.00171C4.50171 2 3.19172 2.82999 2.51172 4.04999"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+          {(data?.customerFullName || '?')[0]}
+        </Avatar>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <h2 style={{ margin: '0 0 2px', fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>{data?.customerFullName || '—'}</h2>
+          <p style={{ margin: 0, fontSize: '.82rem', color: '#6b7280', fontFamily: 'monospace' }}>Order #{data?.orderId}</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <StatusPill status={data?.orderStatus} />
+          <Select
+            value={data?.orderStatus}
+            onChange={handleStatusChange}
+            loading={isUpdating}
+            disabled={isUpdating}
+            options={STATUS_OPTIONS}
+            style={{ width: 150 }}
+            size="small"
+          />
+        </div>
+      </div>
+
+      {/* Main grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, alignItems: 'start' }}>
+
+        {/* Left: items + delivery */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* Order items */}
+          <Card title={`Items (${products.length})`}>
+            {products.length === 0
+              ? <p style={{ color: '#9ca3af', fontSize: '.84rem', margin: '8px 0' }}>No items</p>
+              : products.map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: 14, padding: '12px 0', borderBottom: i < products.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                  <img
+                    src={item?.productImage?.[0]}
+                    alt=""
+                    style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', background: '#f1f5f9', flexShrink: 0 }}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: '.9rem', color: '#111827' }}>{item?.productName || '—'}</p>
+                    <p style={{ margin: '0 0 2px', fontSize: '.8rem', color: '#6b7280' }}>ID: {item?.productId}</p>
+                    <p style={{ margin: 0, fontSize: '.84rem', fontWeight: 600, color: '#fc5353' }}>
+                      {item?.formattedProductAmountNGN || item?.productAmount || '—'}
+                    </p>
+                  </div>
+                </div>
+              ))
+            }
+          </Card>
+
+          {/* Delivery info */}
+          <Card title="Delivery Information">
+            <InfoRow label="Delivery Address" value={data?.deliveryAddress} />
+            <InfoRow label="Phone"            value={data?.phoneNumber} />
+            <InfoRow label="Order Date"       value={data?.orderDate} />
+            <InfoRow label="Payment Status"   value={data?.paymentStatus} />
+          </Card>
+        </div>
+
+        {/* Right: order summary */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <Card title="Order Summary">
+            <InfoRow label="Subtotal"      value={data?.formattedAmountNGN} />
+            <InfoRow label="Delivery Fee"  value={data?.formattedDeliveryFeeNGN || '₦0.00'} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, marginTop: 4 }}>
+              <span style={{ fontSize: '.88rem', fontWeight: 700, color: '#111827' }}>Total</span>
+              <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fc5353' }}>
+                {data?.formattedAmountNGN || '—'}
+              </span>
+            </div>
+          </Card>
+
+          <Card title="Seller">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
+              <Avatar
+                src={products[0]?.productImage?.[0]}
+                size={40}
+                shape="square"
+                style={{ borderRadius: 8, background: '#f1f5f9', flexShrink: 0 }}
               />
-              <path
-                d="M2 17C2 18.66 3.34 20 5 20H6C6 18.9 6.9 18 8 18C9.1 18 10 18.9 10 20H14C14 18.9 14.9 18 16 18C17.1 18 18 18.9 18 20H19C20.66 20 22 18.66 22 17V14H19C18.45 14 18 13.55 18 13V10C18 9.45 18.45 9 19 9H20.29L18.58 6.01001C18.22 5.39001 17.56 5 16.84 5H15V12C15 13.1 14.1 14 13 14H12"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M8 22C9.10457 22 10 21.1046 10 20C10 18.8954 9.10457 18 8 18C6.89543 18 6 18.8954 6 20C6 21.1046 6.89543 22 8 22Z"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M16 22C17.1046 22 18 21.1046 18 20C18 18.8954 17.1046 18 16 18C14.8954 18 14 18.8954 14 20C14 21.1046 14.8954 22 16 22Z"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M22 12V14H19C18.45 14 18 13.55 18 13V10C18 9.45 18.45 9 19 9H20.29L22 12Z"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2 8H8"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2 11H6"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2 14H4"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <FlexibleDiv
-              width="fit-content"
-              gap="8px"
-              flexDir="column"
-              alignItems="start"
-            >
-              {/* Delivery address */}
-              <Space>
-                <h4 className="detail__info">Delivery Address:</h4>
-                <h4 className="detail__data"> {data?.deliveryAddress}, </h4>
-              </Space>
-              {/* Contact Number */}
-              <Space>
-                <h4 className="detail__info">Contact Number:</h4>
-                <h4 className="detail__data">{data?.phoneNumber}</h4>
-              </Space>
-              {/* Status */}
-              <Space>
-                <h4 className="detail__info">Status:</h4>
-                <Select
-                  value={data?.orderStatus}
-                  onChange={handleStatusChange}
-                  loading={isUpdating}
-                  disabled={isUpdating}
-                  options={ORDER_STATUS_OPTIONS}
-                  style={{ minWidth: 140 }}
-                  aria-label="Order Status"
-                />
-              </Space>
-              {/* Order Date */}
-              <Space>
-                <h4 className="detail__info">Order Date:</h4>
-                <h4 className="detail__data"> {data?.orderDate}</h4>
-              </Space>
-            </FlexibleDiv>
-          </FlexibleDiv>
-          {/* Delivery item 2 */}
-          <FlexibleDiv
-            className="delivery__item"
-            gap="12px"
-            alignItems="start"
-            width="fit-content"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12.0017 14H13.0017C14.1017 14 15.0017 13.1 15.0017 12V2H6.00171C4.50171 2 3.19172 2.82999 2.51172 4.04999"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2 17C2 18.66 3.34 20 5 20H6C6 18.9 6.9 18 8 18C9.1 18 10 18.9 10 20H14C14 18.9 14.9 18 16 18C17.1 18 18 18.9 18 20H19C20.66 20 22 18.66 22 17V14H19C18.45 14 18 13.55 18 13V10C18 9.45 18.45 9 19 9H20.29L18.58 6.01001C18.22 5.39001 17.56 5 16.84 5H15V12C15 13.1 14.1 14 13 14H12"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M8 22C9.10457 22 10 21.1046 10 20C10 18.8954 9.10457 18 8 18C6.89543 18 6 18.8954 6 20C6 21.1046 6.89543 22 8 22Z"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M16 22C17.1046 22 18 21.1046 18 20C18 18.8954 17.1046 18 16 18C14.8954 18 14 18.8954 14 20C14 21.1046 14.8954 22 16 22Z"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M22 12V14H19C18.45 14 18 13.55 18 13V10C18 9.45 18.45 9 19 9H20.29L22 12Z"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2 8H8"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2 11H6"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2 14H4"
-                stroke="#FC5353"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <FlexibleDiv
-              width="fit-content"
-              gap="8px"
-              flexDir="column"
-              alignItems="start"
-            >
-              {/* Product Total Amount */}
-              <Space>
-                <h4 className="detail__info">Product Total Amount:</h4>
-                <h4 className="detail__data">
-                  {currentCurrency === 'USD' ? data?.formattedAmountUSD : data?.formattedAmountNGN}
-                </h4>
-              </Space>
-              {/* Delivery Fee*/}
-              <Space>
-                <h4 className="detail__info">Delivery Fee:</h4>
-                <h4 className="detail__data">{deliveryFeeFormatted}</h4>
-              </Space>
-              {/* Total Amount */}
-              <Space className="total__amount">
-                <h4 className="detail__info">Total Amount:</h4>
-                <h4 className="detail__data">
-                  {totalAmountFormatted}
-                </h4>
-              </Space>
-            </FlexibleDiv>
-          </FlexibleDiv>
-        </FlexibleDiv>
-      </OrderDetailsWrapper>
-    </>
+              <span style={{ fontSize: '.84rem', fontWeight: 600, color: '#111827' }}>
+                {data?.sellerFullName || '—'}
+              </span>
+            </div>
+          </Card>
+        </div>
+
+      </div>
+    </div>
   );
 }

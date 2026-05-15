@@ -1,229 +1,144 @@
 import { useState } from 'react';
-import { CreateProductPageWrapper } from '../Create/index.styles';
-import { FlexibleDiv } from '@/components/lib/Box/styles';
-import Button from '@/components/lib/Button';
+import { Tag } from 'antd';
+import { PencilSimple } from '@phosphor-icons/react';
 
-export function ProductDescription({ html }) {
+function InfoRow({ label, value }) {
+  if (!value && value !== 0) return null;
   return (
-    <div
-      className="prose max-w-none"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '9px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <span style={{ fontSize: '.79rem', color: '#6b7280', fontWeight: 500, flexShrink: 0, marginRight: 12, whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: '.84rem', color: '#111827', fontWeight: 500, textAlign: 'right' }}>{value}</span>
+    </div>
   );
 }
 
-export const ProductDetails = ({ data, setEdit }) => {
-  const [category, setCategory] = useState(data?.category);
-  console.log(data, 'data from product details');
+function Card({ title, children, style }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', ...style }}>
+      {title && (
+        <div style={{ padding: '12px 20px', borderBottom: '1px solid #f1f5f9' }}>
+          <p style={{ margin: 0, fontSize: '.78rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em' }}>{title}</p>
+        </div>
+      )}
+      <div style={{ padding: '4px 20px 16px' }}>{children}</div>
+    </div>
+  );
+}
+
+function StockBadge({ inStock }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      padding: '3px 10px', borderRadius: 20, fontSize: '.75rem', fontWeight: 700,
+      background: inStock ? '#dcfce7' : '#fee2e2',
+      color: inStock ? '#16a34a' : '#dc2626',
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: inStock ? '#16a34a' : '#dc2626' }} />
+      {inStock ? 'In Stock' : 'Out of Stock'}
+    </span>
+  );
+}
+
+function ImageGallery({ images = [] }) {
+  const [active, setActive] = useState(0);
+  const valid = images.filter(Boolean);
+  if (!valid.length) return (
+    <div style={{ width: '100%', aspectRatio: '1', background: '#f1f5f9', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ color: '#9ca3af', fontSize: '.84rem' }}>No image</span>
+    </div>
+  );
+  return (
+    <div>
+      <img src={valid[active]} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 10, border: '1px solid #e2e8f0' }} />
+      {valid.length > 1 && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+          {valid.map((src, i) => (
+            <img key={i} src={src} alt="" onClick={() => setActive(i)}
+              style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: `2px solid ${i === active ? '#fc5353' : '#e2e8f0'}`, cursor: 'pointer' }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const CATEGORY_FIELDS = {
+  Sculpture:         [['Weight', 'weight'], ['Width', 'width'], ['Height', 'height'], ['Technique', 'technique']],
+  'Textiles/Fabrics':[['Weight', 'weight'], ['Yard', 'yard'], ['Pattern', 'pattern'], ['Fabric Type', 'fabricType']],
+  Pottery:           [['Diameter', 'diameter'], ['Clay Type', 'clayType'], ['Height', 'height'], ['Glaze', 'glaze']],
+  Paintings:         [['Medium', 'medium'], ['Condition', 'condition'], ['Size', 'size']],
+  Jewelry:           [['Length', 'length'], ['Diameter', 'diameter'], ['Stone Type', 'stoneType'], ['Metal Type', 'metalType']],
+};
+
+export default function ProductDetailsView({ data, onEdit }) {
+  if (!data) return null;
+
+  const catFields = CATEGORY_FIELDS[data.category] || [];
 
   return (
-    <CreateProductPageWrapper style={{ width: '100%' }}>
-      <FlexibleDiv className="tab__item">
-        <FlexibleDiv className="container_wrapper" alignItems="start">
-          {/* Left section */}
-          <FlexibleDiv
-            className="50%"
-            flexDir="column"
-            alignItems="start"
-            gap="24px"
-          >
-            <FlexibleDiv justifyContent="start" alignItems="start" gap="16px">
-              {/* Name */}
-              <div className="product__item">
-                <label htmlFor="Name">Product Name</label>
-                <h5 width={'100%'}>{data?.productName}</h5>
-              </div>
-            </FlexibleDiv>
-            {/* Category */}
-            <div className="product__item">
-              <label htmlFor="Name">Product Category</label>
-              <h5>{data?.subCategory}</h5>
-            </div>
-            {/* Brand */}
-            <div className="product__item">
-              <label htmlFor="Name">Brand</label>
-              <h5>{data?.brandArtist}</h5>
-            </div>
-            {/* Product Type */}
-            <div className="product__item">
-              <label htmlFor="Name">Product Type</label>
-              <h5>{data?.productType}</h5>
-            </div>
-            {/* Regular Price */}
-            {data?.previousPrice === data?.regularPrice ? (
-              <div className="product__item">
-                <label htmlFor="Name">Regular Price(NGN)</label>
-                <h5>{data?.regularPrice}</h5>
-              </div>
-            ) : (
-              <div>
-                <label htmlFor="Name">Regular Price(NGN)</label>
-                <FlexibleDiv
-                  justifyContent="start"
-                  flexWrap="nowrap"
-                  gap="20px"
-                >
-                  <h5>{data?.regularPrice}</h5>
-                  <h5 style={{ textDecoration: 'line-through', color: 'gray' }}>
-                    {data?.previousPrice}
-                  </h5>
-                </FlexibleDiv>
-              </div>
-            )}
-            {/* Sales Price */}
-            <div className="product__item">
-              <label htmlFor="Name">Sales Price(NGN)</label>
-              <h5>{data?.salesPrice}</h5>
-            </div>
-          </FlexibleDiv>
-          {/* right section */}
-          <FlexibleDiv
-            flexDir="column"
-            gap="24px"
-            alignItems="start"
-            width="100%"
-          >
-            <FlexibleDiv gap="16px" justifyContent="start">
-              {data?.images.map((item) => {
-                return <img src={item} key={item} className="details__img" />;
-              })}
-            </FlexibleDiv>
-            {/* Discounts */}
-            <div className="product__item">
-              <label htmlFor="Name">Dsicounts</label>
-              <h5>{data?.discount}</h5>
-            </div>
-            {/*Product Description*/}
-            <div className="product__item">
-              <label htmlFor="Name">Product Description</label>
-              <ProductDescription html={data?.productDescription} />
-            </div>
-            {category === 'Sculpture' ? (
-              <>
-                {/* Weight */}
-                <div className="product__item">
-                  <label htmlFor="Name">Weight</label>
-                  <h5>{data?.weight}</h5>
-                </div>
-                {/* Width */}
-                <div className="product__item">
-                  <label htmlFor="Name">Width</label>
-                  <h5>{data?.width}</h5>
-                </div>
-                {/* Height */}
-                <div className="product__item">
-                  <label htmlFor="Name">Height</label>
-                  <h5>{data?.height}</h5>
-                </div>
-                {/* Technique */}
-                <div className="product__item">
-                  <label htmlFor="Name">Technique</label>
-                  <h5>{data?.technique}</h5>
-                </div>
-              </>
-            ) : category === 'Textiles/Fabrics' ? (
-              <>
-                {/* Weight */}
-                <div className="product__item">
-                  <label htmlFor="Name">Weight</label>
-                  <h5>{data?.weight}</h5>
-                </div>
-                {/* Yard */}
-                <div className="product__item">
-                  <label htmlFor="Name">Yard</label>
-                  <h5>{data?.yard}</h5>
-                </div>
-                {/* Pattern */}
-                <div className="product__item">
-                  <label htmlFor="Name">Pattern</label>
-                  <h5>{data?.pattern}</h5>
-                </div>
-                {/* FabricType */}
-                <div className="product__item">
-                  <label htmlFor="Name">Fabric Type</label>
-                  <h5>{data?.fabricType}</h5>
-                </div>
-              </>
-            ) : category === 'Pottery' ? (
-              <>
-                {/* Diameter */}
-                <div className="product__item">
-                  <label htmlFor="Name">Diameter</label>
-                  <h5>{data?.diameter}</h5>
-                </div>
-                {/* ClayType */}
-                <div className="product__item">
-                  <label htmlFor="Name">Clay Type</label>
-                  <h5>{data?.clayType}</h5>
-                </div>
-                {/* Height */}
-                <div className="product__item">
-                  <label htmlFor="Name">Height</label>
-                  <h5>{data?.height}</h5>
-                </div>
-                {/* Glaze */}
-                <div className="product__item">
-                  <label htmlFor="Name">Glaze</label>
-                  <h5>{data?.glaze}</h5>
-                </div>
-              </>
-            ) : category === 'Paintings' ? (
-              <>
-                {/* Medium */}
-                <div className="product__item">
-                  <label htmlFor="Name">Medium</label>
-                  <h5>{data?.medium}</h5>
-                </div>
-                {/* Condition */}
-                <div className="product__item">
-                  <label htmlFor="Name">Condition</label>
-                  <h5>{data?.condition}</h5>
-                </div>
-                {/* Size */}
-                <div className="product__item">
-                  <label htmlFor="Name">Size</label>
-                  <h5>{data?.size}</h5>
-                </div>
-              </>
-            ) : (
-              category === 'Jewelry' && (
-                <>
-                  {/* length */}
-                  <div className="product__item">
-                    <label htmlFor="Name">Length</label>
-                    <h5>{data?.length}</h5>
-                  </div>
-                  {/* Diameter */}
-                  <div className="product__item">
-                    <label htmlFor="Name">Diameter</label>
-                    <h5>{data?.diameter}</h5>
-                  </div>
-                  {/* stoneType */}
-                  <div className="product__item">
-                    <label htmlFor="Name">Stone Type</label>
-                    <h5>{data?.stoneType}</h5>
-                  </div>
-                  {/* Metal type */}
-                  <div className="product__item">
-                    <label htmlFor="Name">Metal Type</label>
-                    <h5>{data?.metalType}</h5>
-                  </div>
-                </>
-              )
-            )}
-          </FlexibleDiv>
-        </FlexibleDiv>
-      </FlexibleDiv>
-      <FlexibleDiv justifyContent="end" alignItems="start">
-        <Button
-          className="edit__button"
-          onClick={() => {
-            setEdit(true);
-          }}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+      {/* Header */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h2 style={{ margin: '0 0 6px', fontSize: '1.15rem', fontWeight: 700, color: '#111827' }}>{data.productName || '—'}</h2>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <StockBadge inStock={data.inStock} />
+            {data.category && <Tag color="blue" style={{ margin: 0 }}>{data.category}</Tag>}
+            {data.subCategory && <Tag style={{ margin: 0 }}>{data.subCategory}</Tag>}
+          </div>
+        </div>
+        <button
+          onClick={onEdit}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 16px', background: 'var(--oosriPrimary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: '.84rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          Edit
-        </Button>
-      </FlexibleDiv>
-    </CreateProductPageWrapper>
+          Edit Product
+        </button>
+      </div>
+
+      {/* 2-col layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 20, alignItems: 'start' }}>
+
+        {/* Left: images */}
+        <ImageGallery images={data.images} />
+
+        {/* Right: info cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          <Card title="Pricing">
+            <InfoRow label="Regular Price"   value={data.regularPrice ? `₦${Number(data.regularPrice).toLocaleString()}` : null} />
+            <InfoRow label="Sales Price"     value={data.salesPrice   ? `₦${Number(data.salesPrice).toLocaleString()}` : null} />
+            {data.previousPrice && data.previousPrice !== data.regularPrice &&
+              <InfoRow label="Previous Price" value={`₦${Number(data.previousPrice).toLocaleString()}`} />
+            }
+            <InfoRow label="Discount"        value={data.discount} />
+          </Card>
+
+          <Card title="Product Details">
+            <InfoRow label="Brand / Artist"  value={data.brandArtist} />
+            <InfoRow label="Product Type"    value={data.productType} />
+            <InfoRow label="Category"        value={data.category} />
+            <InfoRow label="Subcategory"     value={data.subCategory} />
+          </Card>
+
+          {catFields.length > 0 && (
+            <Card title={`${data.category} Attributes`}>
+              {catFields.map(([label, key]) => <InfoRow key={key} label={label} value={data[key]} />)}
+            </Card>
+          )}
+
+          {data.productDescription && (
+            <Card title="Description">
+              <div
+                style={{ fontSize: '.84rem', color: '#374151', lineHeight: 1.65, paddingTop: 8 }}
+                dangerouslySetInnerHTML={{ __html: data.productDescription }}
+              />
+            </Card>
+          )}
+
+        </div>
+      </div>
+    </div>
   );
-};
+}

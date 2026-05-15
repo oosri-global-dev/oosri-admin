@@ -196,7 +196,13 @@ export default function AllCategoriesScreen() {
       width: 48,
       render: (_, record) => (
         <Popover content={<ActionMenu record={record} />} trigger="click" placement="bottomRight">
-          <EllipsisIcon size={18} style={{ cursor: "pointer", color: "#9ca3af" }} />
+          <button
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, color: '#9ca3af' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+          >
+            <EllipsisIcon size={18} />
+          </button>
         </Popover>
       ),
     },
