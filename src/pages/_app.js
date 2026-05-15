@@ -64,7 +64,7 @@ export default function App({ Component, pageProps }) {
         <QueryClientProvider client={queryClient}>
           {isLoading && <CustomLoader />}
           {getLayout(<Component {...pageProps} />)}
-          <ReactQueryDevtools initialIsOpen={false} />
+          {process.env.NODE_ENV !== 'production' && <ReactQueryDevtools initialIsOpen={false} />}
         </QueryClientProvider>
       </StyledComponentsRegistry>
     </MainProvider>
