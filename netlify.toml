@@ -3,6 +3,7 @@
   publish = ".next"
 
 [build.environment]
+  NODE_VERSION = "20"
   SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_BASE_URL"
 
 [[plugins]]
