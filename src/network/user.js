@@ -47,3 +47,27 @@ export const handleFetchUser = async () => {
   );
   return data;
 };
+
+export const requestPasswordReset = async (email) => {
+  const data = await publicInstance.post(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/auth/admin/request-reset-password`,
+    { email }
+  );
+  return data;
+};
+
+export const validateResetToken = async (email, otp) => {
+  const data = await publicInstance.post(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/auth/admin/password-reset/validate`,
+    { email, otp }
+  );
+  return data;
+};
+
+export const confirmPasswordReset = async (email, otp, newPassword, confirmPassword) => {
+  const data = await publicInstance.post(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/auth/admin/confirm-reset-password`,
+    { email, otp, newPassword, confirmPassword }
+  );
+  return data;
+};
