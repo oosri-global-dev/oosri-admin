@@ -1,237 +1,262 @@
-import { DBWrapper } from './dashboard-layout.styles';
-import React, { useContext, useEffect, useState } from 'react';
-import { Layout, Menu, theme } from 'antd';
-import { DashboardOutlined } from '@ant-design/icons';
-import { FlexibleDiv } from '@/components/lib/Box/styles';
-import { CiSearch as SearchIcon } from 'react-icons/ci';
-import { HiOutlineBellAlert as NotificationIcon } from 'react-icons/hi2';
-import ProfileImage from '@/assets/images/profile.jpg';
-import { IoMdLogOut as LogoutIcon } from 'react-icons/io';
-import { HiOutlineShoppingBag as ProductIcon } from 'react-icons/hi2';
-import { MdPayments as PaymentIcon } from 'react-icons/md';
-import { VscGraph as GraphIcon } from 'react-icons/vsc';
-import { BsPeopleFill } from 'react-icons/bs';
-import { MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/router';
-import Button from '@/components/lib/Button';
-import { FaWindowClose as CloseIcon } from 'react-icons/fa';
-import { GoStack as StackIcon, GoPeople } from 'react-icons/go';
-import { TbCurrencyDollar as FxIcon } from 'react-icons/tb';
+import React, { useContext, useState, useMemo, useCallback } from "react";
+import { DBWrapper } from "./dashboard-layout.styles";
+import { useRouter } from "next/router";
+import Image from "next/image";
+import Link from "next/link";
+import { MainContext } from "@/context";
+import { deleteDataInCookie } from "@/data-helpers/auth-session";
+import Logo from "@/assets/images/logo-oosri.png";
+import ProfileImage from "@/assets/images/profile.jpg";
 
-const { Header, Sider, Content } = Layout;
-import { BsArrowLeft as LeftArrow } from 'react-icons/bs';
-import { MainContext } from '@/context';
-import { isEmpty, isNull } from 'lodash';
+import { DashboardOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { GoStack as ProductsIcon } from "react-icons/go";
+import { GoPeople as SellersIcon } from "react-icons/go";
+import { HiOutlineShoppingBag as OrdersIcon } from "react-icons/hi2";
+import { HiOutlineBellAlert as NotificationIcon } from "react-icons/hi2";
+import { VscGraph as AnalyticsIcon } from "react-icons/vsc";
+import { BsPeopleFill as ProfileIcon, BsPeople as BuyersIcon } from "react-icons/bs";
+import { IoMdLogOut as LogoutIcon } from "react-icons/io";
+import { BsArrowLeft as BackIcon } from "react-icons/bs";
+import { FiMenu as HamburgerIcon, FiX as CloseIcon } from "react-icons/fi";
+import { TbCurrencyDollar as FxIcon } from "react-icons/tb";
+import { MdOutlineCategory as CategoryIcon } from "react-icons/md";
+import { RiListSettingsLine as AttributesIcon } from "react-icons/ri";
+import { BiMoneyWithdraw as PayoutsIcon } from "react-icons/bi";
+import { MdOutlineCreditCard as PaymentGwIcon } from "react-icons/md";
+import { LuTruck as ShippingIcon } from "react-icons/lu";
+import { MdOutlineMonitor as ApiStatusIcon } from "react-icons/md";
+import { IoSettingsOutline as PlatformIcon } from "react-icons/io5";
 
-export default function DashboardLayout({
-  children,
-  title,
-  showBackBtn,
-  titleSubText,
-}) {
-  const [collapsed, setCollapsed] = useState(false);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
-  const { push, pathname, back } = useRouter();
-  const [current, setCurrent] = useState(
-    pathname === '/' || pathname === ''
-      ? '/dashboard'
-      : pathname.includes('/product')
-        ? '/products'
-        : pathname.includes('/categories')
-          ? '/categories'
-          : pathname.includes('/order')
-            ? '/order'
-            : pathname.includes('/attributes')
-              ? '/attributes'
-              : pathname.includes('/fx-rate')
-                ? '/fx-rate'
-                : pathname
-  );
+const NAV_GROUPS = [
+  {
+    group: "Main",
+    items: [
+      { key: "/dashboard",      icon: DashboardOutlined, label: "Dashboard",    href: "/dashboard",      isAntd: true },
+      { key: "/sales-analytics",icon: AnalyticsIcon,     label: "Analytics",    href: "/sales-analytics" },
+    ],
+  },
+  {
+    group: "Commerce",
+    items: [
+      { key: "/order",    icon: OrdersIcon,   label: "Orders",   href: "/order" },
+      { key: "/products", icon: ProductsIcon, label: "Products", href: "/products" },
+    ],
+  },
+  {
+    group: "People",
+    items: [
+      { key: "/sellers", icon: SellersIcon, label: "Sellers", href: "/sellers" },
+      { key: "/buyers",  icon: BuyersIcon,  label: "Buyers",  href: "/buyers" },
+    ],
+  },
+  {
+    group: "Catalog",
+    items: [
+      { key: "/categories", icon: CategoryIcon,   label: "Categories", href: "/categories" },
+      { key: "/attributes", icon: AttributesIcon, label: "Attributes", href: "/attributes" },
+    ],
+  },
+  {
+    group: "Finance",
+    items: [
+      { key: "/payouts", icon: PayoutsIcon, label: "Payouts",       href: "/payouts" },
+      { key: "/fx-rate", icon: FxIcon,      label: "Exchange Rate", href: "/fx-rate" },
+    ],
+  },
+  {
+    group: "System",
+    items: [
+      { key: "/settings/payments",   icon: PaymentGwIcon, label: "Payment Gateways",   href: "/settings/payments" },
+      { key: "/settings/shipping",   icon: ShippingIcon,  label: "Shipping Providers", href: "/settings/shipping" },
+      { key: "/settings/api-status", icon: ApiStatusIcon, label: "API Status",          href: "/settings/api-status" },
+      { key: "/settings/platform",   icon: PlatformIcon,  label: "Platform Config",     href: "/settings/platform" },
+    ],
+  },
+  {
+    group: "Account",
+    items: [
+      { key: "/profile", icon: ProfileIcon, label: "Profile", href: "/admin-profile-page" },
+    ],
+  },
+];
 
-  const {
-    dispatch,
-    state: { user, showNoBusinessModal } = {},
-  } = useContext(MainContext) || {};
+export default function DashboardLayout({ children, title, showBackBtn, titleSubText }) {
+  const [collapsed, setCollapsed]   = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { push, pathname, back }    = useRouter();
 
-  const menuItems = [
-    {
-      key: '/dashboard',
-      icon: <DashboardOutlined />,
-      label: 'Dashboard',
-      onClick: () => {
-        push('/dashboard');
-      },
-    },
-    {
-      key: '/products',
-      icon: <StackIcon />,
-      label: 'Products',
-      onClick: () => {
-        push('/products');
-      },
-    },
-    {
-      key: '/categories',
-      icon: <StackIcon />,
-      label: 'Categories',
-      onClick: () => {
-        push('/categories');
-      },
-    },
-    {
-      key: '/sellers',
-      icon: <GoPeople />,
-      label: 'Sellers',
-      onClick: () => {
-        push('/sellers');
-      },
-    },
-    {
-      key: '/attributes',
-      icon: <StackIcon />,
-      label: 'Attributes',
-      onClick: () => {
-        push('/attributes');
-      },
-    },
-    {
-      key: '/order',
-      icon: <ProductIcon />,
-      label: 'Order',
-      onClick: () => {
-        push('/order');
-      },
-    },
-    {
-      key: '/sales-analytics',
-      icon: <GraphIcon />,
-      label: 'Sales Analytics',
-      onClick: () => {
-        push('/sales-analytics');
-      },
-    },
-    {
-      key: '/fx-rate',
-      icon: <FxIcon size={18} />,
-      label: 'Exchange Rate',
-      onClick: () => {
-        push('/fx-rate');
-      },
-    },
-    {
-      key: '/profile',
-      icon: <BsPeopleFill />,
-      label: 'Profile',
-      onClick: ({ item, key }) => {
-        push('/admin-profile-page');
-      },
-    },
-    {
-      key: '/',
-      icon: <LogoutIcon />,
-      label: 'Logout',
-      onClick: ({ item, key }) => {
-        push('/');
-      },
-    },
-  ];
+  const { state: { user } = {} } = useContext(MainContext) || {};
+
+  const currentKey = useMemo(() => {
+    if (pathname === "/" || pathname === "") return "/dashboard";
+    if (pathname.startsWith("/settings/payments"))   return "/settings/payments";
+    if (pathname.startsWith("/settings/shipping"))   return "/settings/shipping";
+    if (pathname.startsWith("/settings/api-status")) return "/settings/api-status";
+    if (pathname.startsWith("/settings/platform"))   return "/settings/platform";
+    if (pathname.includes("/product"))               return "/products";
+    if (pathname.includes("/order"))                 return "/order";
+    if (pathname.includes("/sales") || pathname.includes("/analytics")) return "/sales-analytics";
+    if (pathname.includes("/seller"))                return "/sellers";
+    if (pathname.includes("/buyer"))                 return "/buyers";
+    if (pathname.includes("/categor"))               return "/categories";
+    if (pathname.includes("/attribute"))             return "/attributes";
+    if (pathname.includes("/payout"))                return "/payouts";
+    if (pathname.includes("/fx-rate"))               return "/fx-rate";
+    if (pathname.includes("/profile"))               return "/profile";
+    return pathname;
+  }, [pathname]);
+
+  const handleLogout = useCallback(() => {
+    deleteDataInCookie("access_token__admin");
+    window.location.href = "/";
+  }, []);
+
+  const initials = useMemo(() => {
+    if (!user?.fullName) return "A";
+    const parts = user.fullName.trim().split(" ");
+    return parts.length >= 2
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      : parts[0][0].toUpperCase();
+  }, [user]);
+
+  const renderNavItem = ({ key, icon: Icon, label, href, isAntd }) => {
+    const isActive = currentKey === key;
+    return (
+      <Link
+        key={key}
+        href={href}
+        className={`nav__item${isActive ? " active" : ""}`}
+        title={collapsed ? label : undefined}
+        onClick={() => setMobileOpen(false)}
+      >
+        <span className="nav__icon">
+          {isAntd ? <Icon style={{ fontSize: 16 }} /> : <Icon size={16} />}
+        </span>
+        <span className="nav__label">{label}</span>
+      </Link>
+    );
+  };
 
   return (
-    <DBWrapper openMenu={collapsed}>
-      <Layout className="layout__box">
-        <Sider
-          trigger={null}
-          collapsible
-          collapsed={false}
-          className="sidebar__box"
-        >
-          <CloseIcon
-            size={22}
-            color="var(--oosriPrimary)"
-            className="close__icon"
-            onClick={() => setCollapsed(true)}
-          />
-          <Menu
-            theme="light"
-            mode="inline"
-            className="menu__wrapper"
-            items={menuItems}
-            onClick={(e) => setCurrent(e.key)}
-            selectedKeys={[current]}
-          />
-        </Sider>
-        <Layout className="content__layout__wrapper">
-          <Header className="header__box">
-            <FlexibleDiv
-              flexDir="row"
-              justifyContent="space-between"
-              className="header__auth__box"
-            >
-              <Button
-                type="text"
-                className="menu__btn"
-                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                onClick={() => setCollapsed(!collapsed)}
-              />
-              <FlexibleDiv
-                flexDir="row"
-                flexWrap="nowrap"
-                width="fit-content"
-                gap="15px"
-              >
-                {showBackBtn && (
-                  <LeftArrow
-                    size={24}
-                    onClick={() => back()}
-                    style={{ cursor: 'pointer' }}
-                  />
-                )}
-                <FlexibleDiv flexDir="column" className="welcome__box">
-                  <p className="dashboard__text">{title || 'Dashboard'}</p>
-                  <p className="sub__text">
-                    {!title && `Welcome, ${user?.fullName}!`}
-                    {titleSubText}
-                  </p>
-                </FlexibleDiv>
-              </FlexibleDiv>
+    <DBWrapper $collapsed={collapsed} $mobileOpen={mobileOpen}>
+      {/* Mobile overlay */}
+      <div className="sidebar__overlay" onClick={() => setMobileOpen(false)} />
 
-              <FlexibleDiv className="header__navigations">
-                <SearchIcon size={25} color="#9E9E9E" />
-                <NotificationIcon size={25} color="#9E9E9E" />
-                <FlexibleDiv
-                  width="fit-content"
-                  gap="8px"
-                  className="profile__nav"
-                >
-                  <img
-                    className="profile__image"
-                    src={user?.profilePicture || ProfileImage.src}
-                    alt="show-img"
-                  />
-                  <div>
-                    {user?.fullName && <h4>{`${user?.fullName || ''}`}.</h4>}
+      {/* ── Sidebar ── */}
+      <aside className="sidebar">
 
-                    <p>Admin</p>
-                  </div>
-                </FlexibleDiv>
-              </FlexibleDiv>
-            </FlexibleDiv>
-          </Header>
-          <Content
-            className="layout__content__wrapper"
-            style={{
-              padding: 24,
-              minHeight: 280,
-              background: colorBgContainer,
-              borderRadius: borderRadiusLG,
-            }}
+        {/* Logo row */}
+        <div className="sidebar__logo">
+          <Link href="/dashboard" className="logo__link">
+            <Image src={Logo} alt="Oosri Admin" width={88} height={28} style={{ objectFit: "contain" }} />
+          </Link>
+          <button
+            className="collapse__btn"
+            onClick={() => setCollapsed(!collapsed)}
+            title={collapsed ? "Expand" : "Collapse"}
           >
-            {children}
-          </Content>
-        </Layout>
-      </Layout>
+            {collapsed
+              ? <MenuUnfoldOutlined style={{ fontSize: 15 }} />
+              : <MenuFoldOutlined  style={{ fontSize: 15 }} />}
+          </button>
+          <button
+            className="mobile__close__btn"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+          >
+            <CloseIcon size={18} />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="sidebar__nav">
+          {NAV_GROUPS.map(({ group, items }) => (
+            <div className="nav__group" key={group}>
+              <span className="nav__group__label">{group}</span>
+              {items.map(renderNavItem)}
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer: user + logout */}
+        <div className="sidebar__footer">
+          <div className="sidebar__user">
+            <div className="user__avatar">
+              {user?.profilePicture
+                ? <Image src={user.profilePicture} alt="profile" fill style={{ objectFit: "cover" }} />
+                : <span className="avatar__initials">{initials}</span>}
+            </div>
+            <div className="user__info">
+              <p className="user__name">{user?.fullName || "Admin"}</p>
+              <span className="user__role">Administrator</span>
+            </div>
+          </div>
+          <button
+            className="logout__btn"
+            onClick={handleLogout}
+            title={collapsed ? "Logout" : undefined}
+          >
+            <LogoutIcon size={16} />
+            <span className="nav__label">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main Area ── */}
+      <div className="main__area">
+
+        {/* Header */}
+        <header className="top__header">
+          <div className="header__left">
+            <button className="hamburger" onClick={() => setMobileOpen(!mobileOpen)}>
+              <HamburgerIcon size={20} />
+            </button>
+            <div className="page__title__wrap">
+              {showBackBtn && (
+                <button className="back__btn" onClick={back}>
+                  <BackIcon size={14} />
+                </button>
+              )}
+              <div>
+                <h1 className="page__title">{title || "Dashboard"}</h1>
+                {titleSubText && <p className="page__sub">{titleSubText}</p>}
+              </div>
+            </div>
+          </div>
+
+          <div className="header__right">
+            <div className="notif__wrap">
+              <NotificationIcon size={18} />
+            </div>
+            <div className="profile__wrap">
+              <div className="profile__avatar__wrap">
+                {user?.profilePicture
+                  ? <Image src={user.profilePicture} alt="profile" fill style={{ objectFit: "cover" }} />
+                  : <span className="header__initials">{initials}</span>}
+              </div>
+              <div className="profile__details">
+                {user?.fullName && <p className="profile__name">{user.fullName}</p>}
+                <span className="profile__role">Administrator</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main className="content__area">
+          {children}
+        </main>
+
+        {/* Footer */}
+        <footer className="dashboard__footer">
+          <p>© {new Date().getFullYear()} Oosri Global. All rights reserved.</p>
+          <div className="footer__links">
+            <a href="#">Help &amp; Support</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+          </div>
+        </footer>
+      </div>
     </DBWrapper>
   );
 }
