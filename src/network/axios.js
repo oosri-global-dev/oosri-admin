@@ -1,14 +1,14 @@
-import { getDataInCookie } from '@/data-helpers/auth-session';
+import { getDataInCookie, storeDataInCookie, deleteDataInCookie } from '@/data-helpers/auth-session';
 import axios from 'axios';
 
-let userToken = null;
-let refreshToken = null;
+const ACCESS_TOKEN_KEY = 'access_token__admin';
+const REFRESH_TOKEN_KEY = 'refresh_token__admin';
 
-if (typeof window !== 'undefined') {
-  // Perform sessionStorage action
-  userToken = getDataInCookie('access_token__admin');
-  refreshToken = sessionStorage.getItem('refresh_token__admin');
-}
+const getAccessToken = () =>
+  typeof window !== 'undefined' ? getDataInCookie(ACCESS_TOKEN_KEY) : null;
+
+const getRefreshTokenValue = () =>
+  typeof window !== 'undefined' ? getDataInCookie(REFRESH_TOKEN_KEY) : null;
 
 export const publicInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BASE_URL,
@@ -23,7 +23,6 @@ export const instance = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-    Authorization: userToken || '',
   },
 });
 
@@ -32,104 +31,79 @@ export const formInstance = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'multipart/form-data',
-    Authorization: userToken || '',
   },
 });
 
-instance.interceptors.request.use(
-  async (config) => {
-    if (userToken) {
-      config.headers['Authorization'] = `Bearer ${userToken}` || null; // for Spring Boot back-end
-    }
-
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+const attachToken = (config) => {
+  const token = getAccessToken();
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete config.headers['Authorization'];
   }
-);
+  return config;
+};
 
-instance.interceptors.response.use(
+instance.interceptors.request.use(attachToken, (error) => Promise.reject(error));
+formInstance.interceptors.request.use(attachToken, (error) => Promise.reject(error));
+
+const handleTokenRefresh = async (originalConfig, axiosInstance) => {
+  originalConfig._retry = true;
+
+  const refreshToken = getRefreshTokenValue();
+  if (!refreshToken) {
+    redirectToLogin();
+    return Promise.reject(new Error('No refresh token available'));
+  }
+
+  try {
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/auth/admin/refresh-token`,
+      { refreshToken },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const newAccessToken = res?.data?.body?.accessToken;
+    if (!newAccessToken) throw new Error('Refresh response missing accessToken');
+
+    storeDataInCookie(ACCESS_TOKEN_KEY, newAccessToken, 30);
+    originalConfig.headers['Authorization'] = `Bearer ${newAccessToken}`;
+    return axiosInstance(originalConfig);
+  } catch (_error) {
+    clearAdminSession();
+    redirectToLogin();
+    return Promise.reject(_error);
+  }
+};
+
+const redirectToLogin = () => {
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.replace('/login');
+  }
+};
+
+const clearAdminSession = () => {
+  deleteDataInCookie(ACCESS_TOKEN_KEY);
+  deleteDataInCookie(REFRESH_TOKEN_KEY);
+};
+
+const makeResponseInterceptor = (axiosInstance) => [
   (res) => res,
   async (err) => {
-    const originalConfig = err.config;
+    const originalConfig = err?.config;
 
-    // Access Token was expired
     if (
       err?.response?.status === 401 &&
+      originalConfig &&
       !originalConfig._retry &&
-      !!userToken
+      !originalConfig.url?.includes('/auth/admin/refresh-token')
     ) {
-      originalConfig._retry = true;
-
-      //   await getRefreshToken(refreshToken, err);
-    } else {
-      return Promise.reject(err);
-    }
-  }
-);
-
-formInstance.interceptors.request.use(
-  async (config) => {
-    if (userToken) {
-      config.headers['Authorization'] = `Bearer ${userToken}` || null; // for Spring Boot back-end
+      return handleTokenRefresh(originalConfig, axiosInstance);
     }
 
-    return config;
+    return Promise.reject(err);
   },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+];
 
-formInstance.interceptors.response.use(
-  (res) => res,
-  async (err) => {
-    const originalConfig = err.config;
-
-    // Access Token was expired
-    if (
-      err?.response?.status === 401 &&
-      !originalConfig._retry &&
-      !!userToken
-    ) {
-      originalConfig._retry = true;
-
-      //   await getRefreshToken(refreshToken, err);
-    } else {
-      return Promise.reject(err);
-    }
-  }
-);
-
-// const getRefreshToken = async (token, err) => {
-//   try {
-//     const data = await axios.post(
-//       `${process.env.NEXT_PUBLIC_BASE_URL}/auth/refresh-token`,
-//       undefined,
-//       {
-//         headers: {
-//           authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     sessionStorage.setItem("user_token", data?.data?.data?.tokens?.accessToken);
-//     sessionStorage.setItem(
-//       "refresh_token",
-//       data?.data?.data?.tokens?.refreshToken
-//     );
-
-//     userToken = data?.data?.data?.tokens?.accessToken;
-//     return await instance(err.config);
-//   } catch (_error) {
-//     if (
-//       _error?.response?.status === 401 &&
-//       window.location.pathname !== "/login"
-//     ) {
-//       window.location.pathname = "/login";
-//       sessionStorage.removeItem("user_token");
-//       sessionStorage.removeItem("refresh_token");
-//     }
-//   }
-// };
+instance.interceptors.response.use(...makeResponseInterceptor(instance));
+formInstance.interceptors.response.use(...makeResponseInterceptor(formInstance));
