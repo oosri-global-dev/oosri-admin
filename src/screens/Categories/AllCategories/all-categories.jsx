@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Table, Avatar, Popover, Modal, Form, Input, Upload, Select, message } from "antd";
 import { IoSearchOutline as SearchIcon } from "react-icons/io5";
 import { HiOutlineEllipsisHorizontal as EllipsisIcon } from "react-icons/hi2";
-import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
+import { PlusOutlined, UploadOutlined, DeleteOutlined } from "@ant-design/icons";
 import { AllCategoriesWrapper } from "./all-categories.styles";
 import {
   getCategories, createCategory, updateCategory, deleteCategory,
@@ -13,20 +13,74 @@ import { uploadToCloudinary } from "@/network/upload";
 
 const { Option } = Select;
 
+/* ─── shared inline style tokens ────────────────────────────────────────── */
+const label = { display: 'block', fontSize: '.78rem', fontWeight: 600, color: '#374151', marginBottom: 5 };
+const inputSt = { width: '100%', borderRadius: 8, fontSize: '.84rem', height: 38 };
+const sectionGap = { display: 'flex', flexDirection: 'column', gap: 14 };
+const divider = { borderTop: '1px solid #f1f5f9', margin: '16px 0 0' };
+
+function ModalLabel({ children }) {
+  return <span style={label}>{children}</span>;
+}
+
+function PrimaryBtn({ children, onClick, disabled, type = 'button', style = {} }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        height: 40, padding: '0 20px', borderRadius: 8, border: 'none',
+        background: disabled ? '#fca5a5' : hov ? '#e03d3d' : 'var(--oosriPrimary)',
+        color: '#fff', fontSize: '.84rem', fontWeight: 600,
+        cursor: disabled ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+        transition: 'background .15s', ...style,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function GhostBtn({ children, onClick, style = {} }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        height: 40, padding: '0 16px', borderRadius: 8,
+        border: '1px solid #e2e8f0', background: hov ? '#f8fafc' : '#fff',
+        color: '#374151', fontSize: '.84rem', fontWeight: 600,
+        cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s', ...style,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ─── main screen ────────────────────────────────────────────────────────── */
 export default function AllCategoriesScreen() {
-  const [categories,              setCategories]              = useState([]);
-  const [loading,                 setLoading]                 = useState(false);
-  const [isSubmitting,            setIsSubmitting]            = useState(false);
-  const [searchTerm,              setSearchTerm]              = useState("");
-  const [isModalOpen,             setIsModalOpen]             = useState(false);
-  const [isSubModalOpen,          setIsSubModalOpen]          = useState(false);
-  const [editingCategory,         setEditingCategory]         = useState(null);
-  const [selectedCategoryForSub,  setSelectedCategoryForSub]  = useState(null);
-  const [subcategories,           setSubcategories]           = useState([]);
+  const [categories,             setCategories]             = useState([]);
+  const [loading,                setLoading]                = useState(false);
+  const [isSubmitting,           setIsSubmitting]           = useState(false);
+  const [searchTerm,             setSearchTerm]             = useState("");
+  const [isModalOpen,            setIsModalOpen]            = useState(false);
+  const [isSubModalOpen,         setIsSubModalOpen]         = useState(false);
+  const [editingCategory,        setEditingCategory]        = useState(null);
+  const [selectedCategoryForSub, setSelectedCategoryForSub] = useState(null);
+  const [subcategories,          setSubcategories]          = useState([]);
+  const [subSubmitting,          setSubSubmitting]          = useState(false);
   const [form]    = Form.useForm();
   const [subForm] = Form.useForm();
-  const [fileList,          setFileList]          = useState([]);
-  const [globalAttributes,  setGlobalAttributes]  = useState([]);
+  const [fileList,         setFileList]         = useState([]);
+  const [globalAttributes, setGlobalAttributes] = useState([]);
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -122,15 +176,18 @@ export default function AllCategoriesScreen() {
   };
 
   const handleCreateSubcategory = async (values) => {
+    setSubSubmitting(true);
     try {
       await createSubcategory({ ...values, categoryId: selectedCategoryForSub._id });
       message.success("Subcategory created");
       subForm.resetFields();
-      fetchCategories();
       const res = await getSubcategories(selectedCategoryForSub._id);
       setSubcategories(res.data.data);
+      fetchCategories();
     } catch {
       message.error("Failed to create subcategory");
+    } finally {
+      setSubSubmitting(false);
     }
   };
 
@@ -148,11 +205,12 @@ export default function AllCategoriesScreen() {
 
   const handleBeforeUpload = (file) => {
     const ok = ["image/jpeg", "image/png", "image/gif", "image/jpg"].includes(file.type);
-    if (!ok)            { message.error("JPG/PNG/GIF only"); return Upload.LIST_IGNORE; }
+    if (!ok) { message.error("JPG/PNG/GIF only"); return Upload.LIST_IGNORE; }
     if (file.size / 1024 / 1024 > 5) { message.error("Max 5 MB"); return Upload.LIST_IGNORE; }
     return true;
   };
 
+  /* ── action menu ─────────────────────────────────────────────────────── */
   const ActionMenu = ({ record }) => {
     const [hov, setHov] = useState(null);
     const item = (key, danger) => ({
@@ -171,6 +229,7 @@ export default function AllCategoriesScreen() {
     );
   };
 
+  /* ── table columns ───────────────────────────────────────────────────── */
   const columns = [
     {
       title: "Image",
@@ -196,9 +255,7 @@ export default function AllCategoriesScreen() {
       dataIndex: "subcategories",
       key: "subs",
       width: 120,
-      render: (subs) => (
-        <span className="sub__count">{subs?.length || 0}</span>
-      ),
+      render: (subs) => <span className="sub__count">{subs?.length || 0}</span>,
     },
     {
       title: "",
@@ -218,10 +275,10 @@ export default function AllCategoriesScreen() {
     },
   ];
 
+  /* ── render ──────────────────────────────────────────────────────────── */
   return (
     <AllCategoriesWrapper>
       <div className="categories__table__section">
-
         <div className="search__body__section">
           <div className="search__section">
             <SearchIcon size={16} color="#9ca3af" />
@@ -250,101 +307,250 @@ export default function AllCategoriesScreen() {
         />
       </div>
 
-      {/* Create / Edit Modal */}
+      {/* ── Create / Edit Modal ──────────────────────────────────────── */}
       <Modal
-        title={editingCategory ? "Edit Category" : "Add Category"}
+        title={null}
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={() => { setIsModalOpen(false); setEditingCategory(null); form.resetFields(); setFileList([]); }}
         footer={null}
-        styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
+        width={520}
+        styles={{ body: { padding: 0 } }}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreateOrUpdate} style={{ marginTop: 20 }}>
-          <Form.Item name="name" label="Name" rules={[{ required: true, message: "Category name required" }]}>
-            <Input style={{ height: 40 }} />
-          </Form.Item>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item label="Image">
-            <Upload
-              beforeUpload={handleBeforeUpload}
-              customRequest={handleCustomUpload}
-              fileList={fileList}
-              onChange={({ fileList }) => setFileList(fileList)}
-              maxCount={1}
-              listType="picture"
-            >
-              <button type="button" className="upload__btn">
-                <UploadOutlined /> Select Image
-              </button>
-            </Upload>
-          </Form.Item>
+        {/* Modal header */}
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #f1f5f9' }}>
+          <p style={{ margin: 0, fontSize: '.72rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+            {editingCategory ? 'Edit Category' : 'New Category'}
+          </p>
+          <h3 style={{ margin: '2px 0 0', fontSize: '1rem', fontWeight: 700, color: '#111827' }}>
+            {editingCategory ? editingCategory.name : 'Add a category'}
+          </h3>
+        </div>
 
-          <p className="attr__heading">Link Attributes</p>
-          <Form.List name="attributes">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...rest }) => (
-                  <div key={key} className="attr__row">
-                    <Form.Item {...rest} name={[name, "attributeId"]} label="Attribute" rules={[{ required: true, message: "Required" }]} style={{ flex: 1, marginBottom: 0 }}>
-                      <Select placeholder="Select attribute" style={{ width: "100%" }}>
-                        {globalAttributes.map((a) => <Option key={a._id} value={a._id}>{a.label}</Option>)}
-                      </Select>
-                    </Form.Item>
-                    <Form.Item {...rest} name={[name, "isRequired"]} label="Required" style={{ width: 110, marginBottom: 0 }}>
-                      <Select>
-                        <Option value={true}>Yes</Option>
-                        <Option value={false}>No</Option>
-                      </Select>
-                    </Form.Item>
-                    <button type="button" className="remove__attr__btn" onClick={() => remove(name)}>Remove</button>
-                  </div>
-                ))}
-                <Form.Item>
-                  <button type="button" className="add__attr__btn" onClick={() => add()}>+ Add Attribute</button>
+        {/* Modal body */}
+        <div style={{ padding: '20px 24px', maxHeight: '65vh', overflowY: 'auto' }}>
+          <Form form={form} layout="vertical" onFinish={handleCreateOrUpdate}>
+            <div style={sectionGap}>
+
+              {/* Name */}
+              <div>
+                <ModalLabel>Category Name <span style={{ color: '#ef4444' }}>*</span></ModalLabel>
+                <Form.Item name="name" noStyle rules={[{ required: true, message: 'Category name is required' }]}>
+                  <Input style={inputSt} placeholder="e.g. Paintings" />
                 </Form.Item>
-              </>
-            )}
-          </Form.List>
+              </div>
 
-          <Form.Item style={{ marginBottom: 0 }}>
-            <button type="submit" className="submit__btn" disabled={isSubmitting}>
-              {isSubmitting ? "Saving…" : editingCategory ? "Update" : "Create"}
-            </button>
-          </Form.Item>
-        </Form>
+              {/* Description */}
+              <div>
+                <ModalLabel>Description</ModalLabel>
+                <Form.Item name="description" noStyle>
+                  <Input.TextArea
+                    rows={3}
+                    placeholder="Briefly describe this category…"
+                    style={{ borderRadius: 8, fontSize: '.84rem', resize: 'none' }}
+                  />
+                </Form.Item>
+              </div>
+
+              {/* Image upload */}
+              <div>
+                <ModalLabel>Category Image</ModalLabel>
+                <Upload
+                  beforeUpload={handleBeforeUpload}
+                  customRequest={handleCustomUpload}
+                  fileList={fileList}
+                  onChange={({ fileList: fl }) => setFileList(fl)}
+                  maxCount={1}
+                  listType="picture"
+                  accept="image/*"
+                >
+                  <button
+                    type="button"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 7,
+                      height: 38, padding: '0 14px', borderRadius: 8,
+                      border: '1px solid #e2e8f0', background: '#f8fafc',
+                      color: '#374151', fontSize: '.82rem', fontWeight: 500,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    <UploadOutlined style={{ fontSize: 14 }} /> Select image
+                  </button>
+                </Upload>
+              </div>
+
+              {/* Attributes */}
+              <div style={{ ...divider, paddingTop: 16 }}>
+                <p style={{ margin: '0 0 12px', fontSize: '.82rem', fontWeight: 700, color: '#111827' }}>
+                  Linked Attributes
+                </p>
+                <Form.List name="attributes">
+                  {(fields, { add, remove }) => (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {fields.map(({ key, name }) => (
+                        <div
+                          key={key}
+                          style={{
+                            display: 'grid', gridTemplateColumns: '1fr 110px 32px',
+                            gap: 8, alignItems: 'flex-end',
+                            padding: '12px 14px', borderRadius: 10,
+                            background: '#f8fafc', border: '1px solid #e2e8f0',
+                          }}
+                        >
+                          <div>
+                            <span style={{ ...label, marginBottom: 4 }}>Attribute</span>
+                            <Form.Item name={[name, 'attributeId']} noStyle rules={[{ required: true, message: 'Required' }]}>
+                              <Select
+                                placeholder="Select attribute"
+                                style={{ width: '100%' }}
+                              >
+                                {globalAttributes.map((a) => (
+                                  <Option key={a._id} value={a._id}>{a.label}</Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </div>
+                          <div>
+                            <span style={{ ...label, marginBottom: 4 }}>Required</span>
+                            <Form.Item name={[name, 'isRequired']} noStyle>
+                              <Select style={{ width: '100%' }}>
+                                <Option value={true}>Yes</Option>
+                                <Option value={false}>No</Option>
+                              </Select>
+                            </Form.Item>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => remove(name)}
+                            style={{
+                              width: 32, height: 32, borderRadius: 6, border: '1px solid #fecaca',
+                              background: '#fff', color: '#ef4444', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <DeleteOutlined style={{ fontSize: 13 }} />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => add()}
+                        style={{
+                          width: '100%', height: 38, borderRadius: 8,
+                          border: '1px dashed #d1d5db', background: '#fafafa',
+                          color: '#6b7280', fontSize: '.82rem', cursor: 'pointer',
+                          fontFamily: 'inherit', transition: 'all .15s',
+                        }}
+                      >
+                        + Add Attribute
+                      </button>
+                    </div>
+                  )}
+                </Form.List>
+              </div>
+            </div>
+
+            {/* Footer actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+              <GhostBtn onClick={() => { setIsModalOpen(false); setEditingCategory(null); form.resetFields(); setFileList([]); }}>
+                Cancel
+              </GhostBtn>
+              <PrimaryBtn type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving…' : editingCategory ? 'Save Changes' : 'Create Category'}
+              </PrimaryBtn>
+            </div>
+          </Form>
+        </div>
       </Modal>
 
-      {/* Subcategory Modal */}
+      {/* ── Subcategory Modal ────────────────────────────────────────── */}
       <Modal
-        title={`Subcategories — ${selectedCategoryForSub?.name}`}
+        title={null}
         open={isSubModalOpen}
-        onCancel={() => setIsSubModalOpen(false)}
+        onCancel={() => { setIsSubModalOpen(false); subForm.resetFields(); }}
         footer={null}
-        width={640}
-        styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
+        width={580}
+        styles={{ body: { padding: 0 } }}
       >
-        <Form form={subForm} layout="vertical" onFinish={handleCreateSubcategory} style={{ marginBottom: 20 }}>
-          <Form.Item name="name" label="Name" rules={[{ required: true, message: "Required" }]}>
-            <Input style={{ height: 40 }} />
-          </Form.Item>
-          <Form.Item name="description" label="Description">
-            <Input style={{ height: 40 }} />
-          </Form.Item>
-          <Form.Item style={{ marginBottom: 0 }}>
-            <button type="submit" className="submit__btn">Add Subcategory</button>
-          </Form.Item>
-        </Form>
+        {/* Header */}
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #f1f5f9' }}>
+          <p style={{ margin: 0, fontSize: '.72rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+            Subcategories
+          </p>
+          <h3 style={{ margin: '2px 0 0', fontSize: '1rem', fontWeight: 700, color: '#111827' }}>
+            {selectedCategoryForSub?.name}
+          </h3>
+        </div>
 
-        <Table
-          dataSource={subcategories}
-          rowKey="_id"
-          pagination={false}
-          columns={[
-            { title: "Name",        dataIndex: "name"        },
-            { title: "Description", dataIndex: "description", render: (v) => v || "—" },
-          ]}
-        />
+        <div style={{ padding: '20px 24px', maxHeight: '70vh', overflowY: 'auto' }}>
+
+          {/* Add subcategory form */}
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 18px', marginBottom: 20 }}>
+            <p style={{ margin: '0 0 14px', fontSize: '.82rem', fontWeight: 700, color: '#111827' }}>Add Subcategory</p>
+            <Form form={subForm} layout="vertical" onFinish={handleCreateSubcategory}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <ModalLabel>Name <span style={{ color: '#ef4444' }}>*</span></ModalLabel>
+                  <Form.Item name="name" noStyle rules={[{ required: true, message: 'Required' }]}>
+                    <Input style={inputSt} placeholder="e.g. Oil Paintings" />
+                  </Form.Item>
+                </div>
+                <div>
+                  <ModalLabel>Description</ModalLabel>
+                  <Form.Item name="description" noStyle>
+                    <Input style={inputSt} placeholder="Optional" />
+                  </Form.Item>
+                </div>
+              </div>
+              <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end' }}>
+                <PrimaryBtn type="submit" disabled={subSubmitting} style={{ height: 36, fontSize: '.82rem' }}>
+                  {subSubmitting ? 'Adding…' : '+ Add'}
+                </PrimaryBtn>
+              </div>
+            </Form>
+          </div>
+
+          {/* Existing subcategories list */}
+          <p style={{ margin: '0 0 10px', fontSize: '.78rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            Existing ({subcategories.length})
+          </p>
+          {subcategories.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '28px 0', color: '#9ca3af', fontSize: '.84rem' }}>
+              No subcategories yet
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {subcategories.map((sub, i) => (
+                <div
+                  key={sub._id || i}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px', borderRadius: 10,
+                    border: '1px solid #e2e8f0', background: '#fff',
+                  }}
+                >
+                  <div>
+                    <p style={{ margin: 0, fontSize: '.84rem', fontWeight: 600, color: '#111827' }}>{sub.name}</p>
+                    {sub.description && (
+                      <p style={{ margin: '2px 0 0', fontSize: '.75rem', color: '#6b7280' }}>{sub.description}</p>
+                    )}
+                  </div>
+                  <span style={{
+                    padding: '2px 10px', borderRadius: 20,
+                    background: '#f1f5f9', fontSize: '.72rem', fontWeight: 600, color: '#64748b',
+                  }}>
+                    Sub
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '14px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
+          <GhostBtn onClick={() => { setIsSubModalOpen(false); subForm.resetFields(); }}>Close</GhostBtn>
+        </div>
       </Modal>
     </AllCategoriesWrapper>
   );
