@@ -1,45 +1,18 @@
-import Icon, {
-  CheckCircleOutlined,
-  InfoCircleOutlined,
-  StopOutlined,
-} from "@ant-design/icons";
-import { notification } from "antd";
+import { App } from "antd";
 
 const useNotification = () => {
+  const { notification } = App.useApp();
+
   const success = (message) => {
-    notification.success({
-      message: message,
-      icon: (
-        <CheckCircleOutlined
-          style={{
-            color: "green",
-          }}
-        />
-      ),
-      style: {
-        color: "green",
-      },
-    });
+    notification.success({ message, placement: "topRight" });
   };
 
   const error = (message) => {
-    notification.error({
-      message: message,
-      icon: <StopOutlined />,
-    });
+    notification.error({ message, placement: "topRight" });
   };
 
   const info = (message) => {
-    notification.info({
-      message: message,
-      icon: (
-        <InfoCircleOutlined
-          style={{
-            color: "#6e9075",
-          }}
-        />
-      ),
-    });
+    notification.info({ message, placement: "topRight" });
   };
 
   return [success, error, info];

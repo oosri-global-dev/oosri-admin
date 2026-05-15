@@ -1,181 +1,132 @@
-import AuthLayout from "@/components/layouts/AuthLayout/auth-layout";
-import { LoginWrapper } from "./login.styles";
-import { FlexibleDiv } from "@/components/lib/Box/styles";
-import TextField from "@/components/lib/TextField";
-import Button from "@/components/lib/Button";
-import { Form } from "antd";
-import TextFieldPassword from "@/components/lib/TextFieldPassword";
+import { useState, useContext } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
+import { LoginPageWrapper } from "./login.styles";
 import { handleLogin, handleVerifyLoginOTP } from "@/network/user";
 import useNotification from "@/hooks/useNotification";
-import { useContext, useState } from "react";
-import CustomLoader from "@/components/lib/CustomLoader";
-import { MainContext, useMainContext } from "@/context";
+import { MainContext } from "@/context";
 import { CURRENT_USER } from "@/context/types";
 import { storeDataInCookie } from "@/data-helpers/auth-session";
 import { VerifyModal } from "@/components/lib/VerifyModal";
+import Logo from "@/assets/images/logo-oosri.png";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 export default function LoginPage() {
-  const [form] = Form.useForm();
   const { push } = useRouter();
   const [success, error] = useNotification();
-  const [btnLoading, setBtnLoading] = useState(false);
-  const [pageLoading, setPageLoading] = useState(false);
   const { dispatch } = useContext(MainContext);
-  const [verifyingOTP, setVerifyingOTP] = useState(false);
-  const [emailAddress, setEmailAddress] = useState("");
-  const [isLoadingOTP, setIsLoadingOTP] = useState(false);
 
-  const handleSubmitLogin = async (values) => {
-    setBtnLoading(true);
+  const [email,       setEmail]       = useState("");
+  const [password,    setPassword]    = useState("");
+  const [showPass,    setShowPass]    = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [otpOpen,     setOtpOpen]     = useState(false);
+  const [otpLoading,  setOtpLoading]  = useState(false);
 
-    setEmailAddress(values?.email);
-    //all fields are already required
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      error("Please enter your email and password.");
+      return;
+    }
+    setLoading(true);
     try {
-      const res = await handleLogin(values);
-
+      const res = await handleLogin({ email, password });
       if (res?.data?.status === 200) {
-        setVerifyingOTP(true);
+        setOtpOpen(true);
       }
     } catch (err) {
-      setBtnLoading(false);
-      error(err?.response?.data?.message);
+      error(err?.response?.data?.message || "Login failed. Check your credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleVerifyOTP = async (otp) => {
-    setIsLoadingOTP(true);
+    setOtpLoading(true);
     try {
-      const res = await handleVerifyLoginOTP({
-        email: emailAddress,
-        otp: otp,
-      });
-
-      await dispatch({
-        type: CURRENT_USER,
-        payload: {
-          ...res?.data?.body?.user,
-        },
-      });
-
-      //store in cookie
-      storeDataInCookie(
-        "access_token__admin",
-        res?.data?.body?.accessToken,
-        30
-      );
-      storeDataInCookie(
-        "refresh_token__admin",
-        res?.data?.body?.refreshToken,
-        30
-      );
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1500);
+      const res = await handleVerifyLoginOTP({ email, otp });
+      await dispatch({ type: CURRENT_USER, payload: { ...res?.data?.body?.user } });
+      storeDataInCookie("access_token__admin",  res?.data?.body?.accessToken,  30);
+      storeDataInCookie("refresh_token__admin", res?.data?.body?.refreshToken, 30);
+      success("Welcome back!");
+      setTimeout(() => { window.location.href = "/dashboard"; }, 1000);
     } catch (err) {
-      setIsLoadingOTP(false);
-      error(err?.response?.data?.message);
+      setOtpLoading(false);
+      error(err?.response?.data?.message || "Invalid OTP. Please try again.");
     }
   };
 
-  const handleCloseOTPModal = () => {
-    setVerifyingOTP(false);
-    setBtnLoading(false);
-  };
-
   return (
-    <AuthLayout
-      heroText="Manage Your Business Effortlessly"
-      subText="Streamline Operations, Maximize Sales"
-    >
-      {pageLoading && <CustomLoader />}
-      {verifyingOTP && (
+    <LoginPageWrapper>
+      {otpOpen && (
         <VerifyModal
-          isOpen={true}
+          isOpen
           onVerify={handleVerifyOTP}
-          loadingBtn={isLoadingOTP}
-          onClose={handleCloseOTPModal}
+          loadingBtn={otpLoading}
+          onClose={() => { setOtpOpen(false); setLoading(false); }}
         />
       )}
-      <LoginWrapper>
-        <h1 className="header__text">Login your Admin Account</h1>
-        <p className="sub__text">
-          Welcome back, Admin! Please log in to manage your online store.
-        </p>
 
-        <FlexibleDiv
-          className="form__parent__wrapper"
-          flexDir="column"
-          width="42%"
-          gap="40px"
-        >
-          <Form
-            form={form}
-            onFinish={handleSubmitLogin}
-            className="login__form"
-          >
-            <FlexibleDiv
-              flexDir="column"
-              alignItems="flex-start"
-              width="100%"
-              gap="5px"
-            >
-              <label>Email</label>
-              <Form.Item name={"email"}>
-                <TextField
-                  type="email"
-                  name="email"
-                  required
-                  bgColor="#FAFAFA"
-                />
-              </Form.Item>
-            </FlexibleDiv>
-            <FlexibleDiv
-              flexDir="column"
-              alignItems="flex-start"
-              width="100%"
-              gap="5px"
-            >
-              <label>Password</label>
-              <Form.Item name={"password"}>
-                <TextFieldPassword
-                  autoComplete="new-password"
-                  name="password"
-                  required
-                  bgColor="#FAFAFA"
-                />
-              </Form.Item>
-              <FlexibleDiv
-                className="forgot__pass"
-                flexDir="row"
-                justifyContent="flex-end"
+      <div className="login__card">
+        <div className="card__logo">
+          <Image src={Logo} alt="Oosri" height={36} />
+        </div>
+
+        <div className="card__heading">
+          <h1>Admin Portal</h1>
+          <p>Sign in to manage your platform</p>
+        </div>
+
+        <form className="form__fields" onSubmit={handleSubmit}>
+          <div className="field__group">
+            <label htmlFor="email">Email address</label>
+            <input
+              id="email"
+              className="field__input"
+              type="email"
+              placeholder="admin@oosri.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
+          </div>
+
+          <div className="field__group">
+            <label htmlFor="password">Password</label>
+            <div className="password__wrapper">
+              <input
+                id="password"
+                className="field__input"
+                type={showPass ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                className="eye__btn"
+                onClick={() => setShowPass((v) => !v)}
+                tabIndex={-1}
               >
-                <p>
-                  Forgot password?{" "}
-                  <span onClick={() => push("/forgot-password")}>
-                    Click here
-                  </span>
-                </p>
-              </FlexibleDiv>
-            </FlexibleDiv>
+                {showPass ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}
+              </button>
+            </div>
+          </div>
 
-            <Button
-              width="100%"
-              radius="8px"
-              color="var(--oosriWhite)"
-              loading={btnLoading}
-              backgroundColor="var(--oosriPrimary)"
-              htmlType="submit"
-            >
-              Login
-            </Button>
-            {/* <p className="already__acct">
-              I have account already{" "}
-              <span onClick={() => push("/register")}>Register here</span>
-            </p> */}
-          </Form>
-        </FlexibleDiv>
-      </LoginWrapper>
-    </AuthLayout>
+          <div className="forgot__link">
+            <span onClick={() => push("/forgot-password")}>Forgot password?</span>
+          </div>
+
+          <button className="submit__btn" type="submit" disabled={loading}>
+            {loading ? <span className="btn__spinner" /> : null}
+            {loading ? "Signing in…" : "Sign In"}
+          </button>
+        </form>
+      </div>
+    </LoginPageWrapper>
   );
 }
