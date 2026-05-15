@@ -84,7 +84,8 @@ export default function AllCategoriesScreen() {
             const payload = {
                 name: values.name,
                 description: values.description,
-                attributes: values.attributes || []
+                attributes: values.attributes || [],
+                requiresSubcategory: values.requiresSubcategory !== false
             };
             if (secure_url) {
                 payload.image = secure_url;
@@ -186,6 +187,7 @@ export default function AllCategoriesScreen() {
                                     form.setFieldsValue({
                                         name: record.name,
                                         description: record.description,
+                                        requiresSubcategory: record.requiresSubcategory !== false,
                                         attributes: record.attributes?.map(a => ({
                                             attributeId: a.attributeId,
                                             isRequired: a.isRequired,
@@ -336,6 +338,18 @@ export default function AllCategoriesScreen() {
                         style={{ marginBottom: '20px' }}
                     >
                         <Input.TextArea rows={4} />
+                    </Form.Item>
+                    <Form.Item
+                        name="requiresSubcategory"
+                        label="Sub-Category Selection"
+                        initialValue={true}
+                        style={{ marginBottom: '20px' }}
+                        extra="Controls whether sellers must pick a sub-category when listing a product in this category."
+                    >
+                        <Select style={{ height: '40px' }}>
+                            <Option value={true}>Required — sellers must pick a sub-category</Option>
+                            <Option value={false}>Optional — sellers can skip sub-category</Option>
+                        </Select>
                     </Form.Item>
                     <Form.Item label="Image" style={{ marginBottom: '30px' }}>
                         <Upload
