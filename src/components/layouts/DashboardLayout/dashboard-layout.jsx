@@ -29,50 +29,58 @@ import { IoSettingsOutline as PlatformIcon } from "react-icons/io5";
 import { Popover, Badge } from "antd";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationPanel from "@/components/lib/NotificationPanel";
+import { usePermission } from "@/hooks/usePermission";
+import { MdAdminPanelSettings as AdminsIcon } from "react-icons/md";
 
 const NAV_GROUPS = [
   {
     group: "Main",
     items: [
-      { key: "/dashboard",      icon: DashboardOutlined, label: "Dashboard",    href: "/dashboard",      isAntd: true },
-      { key: "/sales-analytics",icon: AnalyticsIcon,     label: "Analytics",    href: "/sales-analytics" },
+      { key: "/dashboard",       icon: DashboardOutlined, label: "Dashboard",  href: "/dashboard",      isAntd: true },
+      { key: "/sales-analytics", icon: AnalyticsIcon,     label: "Analytics",  href: "/sales-analytics", permission: "analytics" },
     ],
   },
   {
     group: "Commerce",
     items: [
-      { key: "/order",    icon: OrdersIcon,   label: "Orders",   href: "/order" },
-      { key: "/products", icon: ProductsIcon, label: "Products", href: "/products" },
+      { key: "/order",    icon: OrdersIcon,   label: "Orders",   href: "/order",    permission: "orders" },
+      { key: "/products", icon: ProductsIcon, label: "Products", href: "/products", permission: "products" },
     ],
   },
   {
     group: "People",
     items: [
-      { key: "/sellers", icon: SellersIcon, label: "Sellers", href: "/sellers" },
-      { key: "/buyers",  icon: BuyersIcon,  label: "Buyers",  href: "/buyers" },
+      { key: "/sellers", icon: SellersIcon, label: "Sellers", href: "/sellers", permission: "sellers" },
+      { key: "/buyers",  icon: BuyersIcon,  label: "Buyers",  href: "/buyers",  permission: "buyers" },
     ],
   },
   {
     group: "Catalog",
     items: [
-      { key: "/categories", icon: CategoryIcon,   label: "Categories", href: "/categories" },
-      { key: "/attributes", icon: AttributesIcon, label: "Attributes", href: "/attributes" },
+      { key: "/categories", icon: CategoryIcon,   label: "Categories", href: "/categories", permission: "categories" },
+      { key: "/attributes", icon: AttributesIcon, label: "Attributes", href: "/attributes", permission: "attributes" },
     ],
   },
   {
     group: "Finance",
     items: [
-      { key: "/payouts", icon: PayoutsIcon, label: "Payouts",       href: "/payouts" },
-      { key: "/fx-rate", icon: FxIcon,      label: "Exchange Rate", href: "/fx-rate" },
+      { key: "/payouts", icon: PayoutsIcon, label: "Payouts",       href: "/payouts",  permission: "payouts" },
+      { key: "/fx-rate", icon: FxIcon,      label: "Exchange Rate", href: "/fx-rate",  permission: "fx" },
     ],
   },
   {
     group: "System",
     items: [
-      { key: "/settings/payments",   icon: PaymentGwIcon, label: "Payment Gateways",   href: "/settings/payments" },
-      { key: "/settings/shipping",   icon: ShippingIcon,  label: "Shipping Providers", href: "/settings/shipping" },
-      { key: "/settings/api-status", icon: ApiStatusIcon, label: "API Status",          href: "/settings/api-status" },
-      { key: "/settings/platform",   icon: PlatformIcon,  label: "Platform Config",     href: "/settings/platform" },
+      { key: "/settings/payments",   icon: PaymentGwIcon, label: "Payment Gateways",   href: "/settings/payments",   permission: "settings" },
+      { key: "/settings/shipping",   icon: ShippingIcon,  label: "Shipping Providers", href: "/settings/shipping",   permission: "settings" },
+      { key: "/settings/api-status", icon: ApiStatusIcon, label: "API Status",         href: "/settings/api-status", permission: "settings" },
+      { key: "/settings/platform",   icon: PlatformIcon,  label: "Platform Config",    href: "/settings/platform",   permission: "settings" },
+    ],
+  },
+  {
+    group: "Admin",
+    items: [
+      { key: "/admins", icon: AdminsIcon, label: "Manage Admins", href: "/admins", superAdminOnly: true },
     ],
   },
   {
@@ -92,6 +100,20 @@ export default function DashboardLayout({ children, title, showBackBtn, titleSub
   const { state: { user } = {} } = useContext(MainContext) || {};
 
   const { notifications, unreadCount, isLoading, markRead, markAllRead, remove } = useNotifications();
+  const { hasPermission, isSuperAdmin } = usePermission();
+
+  const visibleGroups = useMemo(() =>
+    NAV_GROUPS
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => {
+          if (item.superAdminOnly) return isSuperAdmin;
+          if (item.permission) return hasPermission(item.permission);
+          return true;
+        }),
+      }))
+      .filter((group) => group.items.length > 0),
+  [isSuperAdmin, hasPermission]);
 
   const currentKey = useMemo(() => {
     if (pathname === "/" || pathname === "") return "/dashboard";
@@ -109,6 +131,7 @@ export default function DashboardLayout({ children, title, showBackBtn, titleSub
     if (pathname.includes("/payout"))                return "/payouts";
     if (pathname.includes("/fx-rate"))               return "/fx-rate";
     if (pathname.includes("/profile"))               return "/profile";
+    if (pathname.includes("/admin"))                 return "/admins";
     return pathname;
   }, [pathname]);
 
@@ -176,7 +199,7 @@ export default function DashboardLayout({ children, title, showBackBtn, titleSub
 
         {/* Navigation */}
         <nav className="sidebar__nav">
-          {NAV_GROUPS.map(({ group, items }) => (
+          {visibleGroups.map(({ group, items }) => (
             <div className="nav__group" key={group}>
               <span className="nav__group__label">{group}</span>
               {items.map(renderNavItem)}
