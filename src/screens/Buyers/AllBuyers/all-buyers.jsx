@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Table, Popover, Pagination } from "antd";
+import { Table, Popover, Pagination, Modal } from "antd";
 import { AllBuyersWrapper } from "./all-buyers.styles";
 import { useBuyers } from "@/hooks/useBuyers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -103,7 +103,14 @@ export default function AllBuyers() {
             </button>
           : <button
               style={itemStyle('suspend', true)}
-              onClick={() => suspend({ id: buyer.id, reason: "Admin action" })}
+              onClick={() => Modal.confirm({
+                title: 'Suspend this buyer?',
+                content: 'The buyer will lose access to their account.',
+                okText: 'Suspend',
+                okType: 'danger',
+                cancelText: 'Cancel',
+                onOk: () => suspend({ id: buyer.id, reason: 'Admin action' }),
+              })}
               onMouseEnter={() => setHoveredItem('suspend')}
               onMouseLeave={() => setHoveredItem(null)}
             >

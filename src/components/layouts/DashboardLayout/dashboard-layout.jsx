@@ -26,6 +26,9 @@ import { MdOutlineCreditCard as PaymentGwIcon } from "react-icons/md";
 import { LuTruck as ShippingIcon } from "react-icons/lu";
 import { MdOutlineMonitor as ApiStatusIcon } from "react-icons/md";
 import { IoSettingsOutline as PlatformIcon } from "react-icons/io5";
+import { Popover, Badge } from "antd";
+import { useNotifications } from "@/hooks/useNotifications";
+import NotificationPanel from "@/components/lib/NotificationPanel";
 
 const NAV_GROUPS = [
   {
@@ -81,11 +84,14 @@ const NAV_GROUPS = [
 ];
 
 export default function DashboardLayout({ children, title, showBackBtn, titleSubText }) {
-  const [collapsed, setCollapsed]   = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const { push, pathname, back }    = useRouter();
+  const [collapsed, setCollapsed]     = useState(false);
+  const [mobileOpen, setMobileOpen]   = useState(false);
+  const [notifOpen, setNotifOpen]     = useState(false);
+  const { push, pathname, back }      = useRouter();
 
   const { state: { user } = {} } = useContext(MainContext) || {};
+
+  const { notifications, unreadCount, isLoading, markRead, markAllRead, remove } = useNotifications();
 
   const currentKey = useMemo(() => {
     if (pathname === "/" || pathname === "") return "/dashboard";
@@ -225,9 +231,29 @@ export default function DashboardLayout({ children, title, showBackBtn, titleSub
           </div>
 
           <div className="header__right">
-            <div className="notif__wrap">
-              <NotificationIcon size={18} />
-            </div>
+            <Popover
+              open={notifOpen}
+              onOpenChange={setNotifOpen}
+              trigger="click"
+              placement="bottomRight"
+              arrow={false}
+              content={
+                <NotificationPanel
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  isLoading={isLoading}
+                  onRead={(id) => { markRead(id); }}
+                  onMarkAllRead={() => { markAllRead(); }}
+                  onDelete={(id) => { remove(id); }}
+                />
+              }
+            >
+              <div className="notif__wrap" style={{ cursor: 'pointer' }}>
+                <Badge count={unreadCount} size="small" offset={[-2, 2]}>
+                  <NotificationIcon size={18} />
+                </Badge>
+              </div>
+            </Popover>
             <div className="profile__wrap">
               <div className="profile__avatar__wrap">
                 {user?.profilePicture

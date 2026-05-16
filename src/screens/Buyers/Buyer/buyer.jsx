@@ -3,7 +3,7 @@ import { BuyerWrapper } from "./buyer.styles";
 import { useBuyer } from "@/hooks/useBuyer";
 import { suspendBuyer, unsuspendBuyer } from "@/network/buyers";
 import useNotification from "@/hooks/useNotification";
-import { Spin } from "antd";
+import { Modal, Spin } from "antd";
 import { formatDate } from "@/utils/format-date";
 
 function initials(name = "") {
@@ -52,7 +52,18 @@ export default function BuyerScreen({ buyerId }) {
             ? <button className="btn__unsuspend" disabled={unsuspending} onClick={() => unsuspend(buyerId)}>
                 {unsuspending ? "Unsuspending…" : "Unsuspend"}
               </button>
-            : <button className="btn__suspend" disabled={suspending} onClick={() => suspend(buyerId)}>
+            : <button
+                className="btn__suspend"
+                disabled={suspending}
+                onClick={() => Modal.confirm({
+                  title: 'Suspend this buyer?',
+                  content: 'The buyer will lose access to their account.',
+                  okText: 'Suspend',
+                  okType: 'danger',
+                  cancelText: 'Cancel',
+                  onOk: () => suspend(buyerId),
+                })}
+              >
                 {suspending ? "Suspending…" : "Suspend Buyer"}
               </button>
           }

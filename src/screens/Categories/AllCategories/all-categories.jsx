@@ -159,14 +159,23 @@ export default function AllCategoriesScreen() {
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteCategory(id);
-      message.success("Category deleted");
-      fetchCategories();
-    } catch {
-      message.error("Failed to delete category");
-    }
+  const handleDelete = (id) => {
+    Modal.confirm({
+      title: 'Delete this category?',
+      content: 'This action cannot be undone.',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await deleteCategory(id);
+          message.success("Category deleted");
+          fetchCategories();
+        } catch {
+          message.error("Failed to delete category");
+        }
+      },
+    });
   };
 
   const handleManageSubs = async (record) => {

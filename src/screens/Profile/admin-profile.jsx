@@ -1,8 +1,10 @@
-import { useState, useContext, useRef } from 'react';
+import { useState, useContext, useRef, useEffect } from 'react';
 import { Form, Input, Spin, message } from 'antd';
-import { MdCameraAlt, MdEdit, MdSave, MdClose } from 'react-icons/md';
+import { MdCameraAlt, MdEdit, MdSave, MdClose, MdLock } from 'react-icons/md';
 import { MainContext } from '@/context';
 import { updateProfileData, UpdateProfilePicture } from '@/network/profile';
+import { handleFetchUser } from '@/network/user';
+import { CURRENT_USER } from '@/context/types';
 import useNotification from '@/hooks/useNotification';
 
 function initials(name = '') {
@@ -47,6 +49,16 @@ export default function AdminProfile() {
   const { state: { user }, dispatch } = useContext(MainContext);
   const [form] = Form.useForm();
 
+  useEffect(() => {
+    handleFetchUser()
+      .then((fresh) => {
+        if (fresh?.data?.body?.user) {
+          dispatch({ type: CURRENT_USER, payload: { ...fresh.data.body.user } });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleAvatarClick = () => {
     if (fileInputRef.current) fileInputRef.current.click();
   };
@@ -69,27 +81,38 @@ export default function AdminProfile() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const values = form.getFieldsValue();
+      let values;
+      try {
+        values = await form.validateFields();
+      } catch {
+        setSaving(false);
+        return;
+      }
 
       if (pendingFile) {
         setUploading(true);
         const res = await UpdateProfilePicture({ profilePicture: pendingFile });
-        const updatedImage = res?.data?.data?.body?.profileImage;
+        const updatedImage = res?.data?.body?.profileImage;
         if (updatedImage) dispatch({ type: 'UPDATE_USER', payload: { profileImage: updatedImage } });
         setPendingFile(null);
         setPreviewUrl(null);
         setUploading(false);
       }
 
-      if (values.phoneNumber !== user?.phoneNumber) {
-        await updateProfileData({ phoneNumber: values.phoneNumber });
-        dispatch({ type: 'UPDATE_USER', payload: { phoneNumber: values.phoneNumber } });
+      const payload = {};
+      if (values.fullName?.trim()) payload.fullName = values.fullName.trim();
+      if (values.phoneNumber !== undefined && values.phoneNumber !== null) payload.phoneNumber = values.phoneNumber;
+
+      if (Object.keys(payload).length > 0) {
+        await updateProfileData(payload);
+        const fresh = await handleFetchUser();
+        dispatch({ type: CURRENT_USER, payload: { ...fresh?.data?.body?.user } });
       }
 
       success('Profile updated successfully');
       setEditMode(false);
     } catch (err) {
-      error('Failed to save profile');
+      error(err?.response?.data?.message || 'Failed to save profile');
     } finally {
       setSaving(false);
       setUploading(false);
@@ -100,7 +123,7 @@ export default function AdminProfile() {
     setEditMode(false);
     setPendingFile(null);
     setPreviewUrl(null);
-    form.setFieldsValue({ phoneNumber: user?.phoneNumber || '' });
+    form.setFieldsValue({ fullName: user?.fullName || '', phoneNumber: user?.phoneNumber || '' });
   };
 
   const avatarSrc = previewUrl || user?.profileImage;
@@ -173,7 +196,7 @@ export default function AdminProfile() {
             </>
           ) : (
             <button
-              onClick={() => { setEditMode(true); form.setFieldsValue({ phoneNumber: user?.phoneNumber || '' }); }}
+              onClick={() => { setEditMode(true); form.setFieldsValue({ fullName: user?.fullName || '', phoneNumber: user?.phoneNumber || '' }); }}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 16px', background: '#f1f5f9', color: '#374151', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '.84rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               <MdEdit size={16} />Edit Profile
@@ -183,16 +206,24 @@ export default function AdminProfile() {
       </div>
 
       {/* Details card */}
-      <Form form={form} layout="vertical" initialValues={{ phoneNumber: user?.phoneNumber || '' }}>
+      <Form form={form} layout="vertical" initialValues={{ fullName: user?.fullName || '', phoneNumber: user?.phoneNumber || '' }}>
         <InfoCard title="Account Information">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
 
             <FieldRow label="Full Name">
-              <div style={STATIC_STYLE}>{user?.fullName || '—'}</div>
+              {editMode
+                ? <Form.Item name="fullName" style={{ margin: 0 }} rules={[{ required: true, message: 'Name is required' }]}>
+                    <Input style={{ height: 40 }} placeholder="Full name" />
+                  </Form.Item>
+                : <div style={STATIC_STYLE}>{user?.fullName || '—'}</div>
+              }
             </FieldRow>
 
             <FieldRow label="Email Address">
-              <div style={STATIC_STYLE}>{user?.email || '—'}</div>
+              <div style={{ ...STATIC_STYLE, justifyContent: 'space-between' }}>
+                <span>{user?.email || '—'}</span>
+                <MdLock size={14} color="#9ca3af" title="Email cannot be changed" />
+              </div>
             </FieldRow>
 
             <FieldRow label="Phone Number">
@@ -216,8 +247,7 @@ export default function AdminProfile() {
       <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '14px 20px', display: 'flex', gap: 10 }}>
         <span style={{ fontSize: '1rem', flexShrink: 0 }}>🔒</span>
         <p style={{ margin: 0, fontSize: '.82rem', color: '#92400e', lineHeight: 1.55 }}>
-          Your name and email are managed by the platform. To change them, contact a super-admin.
-          Only your phone number and profile picture can be updated here.
+          Your email address cannot be changed here. Contact platform support if you need to update it.
         </p>
       </div>
 

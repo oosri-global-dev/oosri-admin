@@ -220,14 +220,23 @@ export default function AttributesScreen() {
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteAttribute(id);
-      message.success('Attribute deleted');
-      fetchAttributes();
-    } catch {
-      message.error('Failed to delete attribute');
-    }
+  const handleDelete = (id) => {
+    Modal.confirm({
+      title: 'Delete this attribute?',
+      content: 'This action cannot be undone.',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await deleteAttribute(id);
+          message.success('Attribute deleted');
+          fetchAttributes();
+        } catch {
+          message.error('Failed to delete attribute');
+        }
+      },
+    });
   };
 
   /* ── table columns ─────────────────────────────────────────────── */
