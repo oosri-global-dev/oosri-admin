@@ -55,29 +55,40 @@ export const VerifyModal = ({ isOpen, onClose, onVerify, loadingBtn }) => {
 
   if (!isOpen) return null;
 
+  const isComplete = otp.length === 4;
+
   return (
     <ModalOverlay>
       <ModalContent>
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <h2>Two-Factor Authentication</h2>
         <p className="sub__text">
-          To complete your login, please enter the 6-digit verification code
-          sent to your registered email.
+          To complete your login, please enter the 4-digit verification code
+          sent to your registered email. Always use the <strong>most recent</strong> code.
         </p>
-        <TextField
-          className="text__field__otp"
-          type="number"
-          name="otp"
-          maxLength={4}
-          value={otp}
-          onChange={(e) => setOTP(e?.target?.value)}
-          placeholder="Enter OTP"
-        />
+        <div style={{ position: "relative", width: "100%" }}>
+          <TextField
+            className="text__field__otp"
+            type="number"
+            name="otp"
+            maxLength={4}
+            value={otp}
+            onChange={(e) => setOTP(e?.target?.value ?? "")}
+            placeholder="Enter 4-digit code"
+          />
+          <span style={{
+            position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+            fontSize: ".75rem", color: isComplete ? "#16a34a" : "#9ca3af", pointerEvents: "none",
+          }}>
+            {otp.length}/4
+          </span>
+        </div>
         <Button
           backgroundColor="var(--oosriPrimary)"
           color="#fff"
           loading={loadingBtn}
-          onClick={() => onVerify(otp)}
+          disabled={!isComplete || loadingBtn}
+          onClick={() => isComplete && onVerify(otp)}
         >
           Proceed to Dashboard
         </Button>

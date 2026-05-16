@@ -31,6 +31,8 @@ import { useNotifications } from "@/hooks/useNotifications";
 import NotificationPanel from "@/components/lib/NotificationPanel";
 import { usePermission } from "@/hooks/usePermission";
 import { MdAdminPanelSettings as AdminsIcon } from "react-icons/md";
+import { TbArrowBackUp as ReturnsIcon } from "react-icons/tb";
+import { MdVerifiedUser as KycIcon } from "react-icons/md";
 
 const NAV_GROUPS = [
   {
@@ -52,6 +54,7 @@ const NAV_GROUPS = [
     items: [
       { key: "/sellers", icon: SellersIcon, label: "Sellers", href: "/sellers", permission: "sellers" },
       { key: "/buyers",  icon: BuyersIcon,  label: "Buyers",  href: "/buyers",  permission: "buyers" },
+      { key: "/kyc",     icon: KycIcon,     label: "KYC",     href: "/kyc",     permission: "kyc" },
     ],
   },
   {
@@ -66,6 +69,7 @@ const NAV_GROUPS = [
     items: [
       { key: "/payouts", icon: PayoutsIcon, label: "Payouts",       href: "/payouts",  permission: "payouts" },
       { key: "/fx-rate", icon: FxIcon,      label: "Exchange Rate", href: "/fx-rate",  permission: "fx" },
+      { key: "/returns", icon: ReturnsIcon, label: "Returns",       href: "/returns",  permission: "returns" },
     ],
   },
   {
@@ -113,7 +117,7 @@ export default function DashboardLayout({ children, title, showBackBtn, titleSub
         }),
       }))
       .filter((group) => group.items.length > 0),
-  [isSuperAdmin, hasPermission]);
+  [user, isSuperAdmin, hasPermission]);
 
   const currentKey = useMemo(() => {
     if (pathname === "/" || pathname === "") return "/dashboard";
@@ -130,6 +134,8 @@ export default function DashboardLayout({ children, title, showBackBtn, titleSub
     if (pathname.includes("/attribute"))             return "/attributes";
     if (pathname.includes("/payout"))                return "/payouts";
     if (pathname.includes("/fx-rate"))               return "/fx-rate";
+    if (pathname.includes("/return"))               return "/returns";
+    if (pathname.includes("/kyc"))                  return "/kyc";
     if (pathname.includes("/profile"))               return "/profile";
     if (pathname.includes("/admin"))                 return "/admins";
     return pathname;

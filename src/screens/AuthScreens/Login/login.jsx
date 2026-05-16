@@ -50,7 +50,7 @@ export default function LoginPage() {
       storeDataInCookie("access_token__admin",  res?.data?.body?.accessToken,  30);
       storeDataInCookie("refresh_token__admin", res?.data?.body?.refreshToken, 30);
       success("Welcome back!");
-      setTimeout(() => { window.location.href = "/dashboard"; }, 1000);
+      push("/dashboard");
     } catch (err) {
       setOtpLoading(false);
       error(err?.response?.data?.message || "Invalid OTP. Please try again.");
