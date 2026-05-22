@@ -11,11 +11,11 @@ export const getKycApplication = async (kycId) => {
 };
 
 export const approveKyc = async (kycId) => {
-  const { data } = await instance.post(`/admin/kyc/${kycId}/approve`);
+  const { data } = await instance.patch(`/admin/kyc/${kycId}/approve`);
   return data;
 };
 
 export const rejectKyc = async (kycId, reason) => {
-  const { data } = await instance.post(`/admin/kyc/${kycId}/reject`, { reason });
+  const { data } = await instance.patch(`/admin/kyc/${kycId}/reject`, { reason });
   return data;
 };

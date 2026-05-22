@@ -13,7 +13,7 @@ export function useNotifications() {
 
   const query = useQuery({
     queryKey: QUERY_KEY,
-    queryFn: () => fetchNotifications({ skip: 0, limit: 20 }),
+    queryFn: () => fetchNotifications({ page: 1, limit: 20 }),
     refetchInterval: 30_000,
     staleTime: 20_000,
     select: (data) => ({
