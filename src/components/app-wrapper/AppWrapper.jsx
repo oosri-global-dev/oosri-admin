@@ -3,7 +3,7 @@ import { MainContext } from "@/context";
 import { handleFetchUser } from "@/network/user";
 import { CURRENT_USER } from "@/context/types";
 import CustomLoader from "@/components/lib/CustomLoader";
-import { getDataInCookie } from "@/data-helpers/auth-session";
+import { getDataInCookie, deleteDataInCookie } from "@/data-helpers/auth-session";
 import { useRouter } from "next/router";
 
 // Array of paths that should be excluded from redirection
@@ -62,8 +62,8 @@ const AppWrapper = ({ children }) => {
         }
         setIsPageLoading(false);
       } catch (err) {
-        console.clear();
-        console.log(err, "err");
+        deleteDataInCookie('access_token__admin');
+        deleteDataInCookie('refresh_token__admin');
         // Only redirect to home if not on an excluded path
         if (
           !excludedPaths.some((path) => pathname.startsWith(path)) &&
