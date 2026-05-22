@@ -6,7 +6,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { approveKyc, rejectKyc } from "@/network/kyc";
 import { useRouter } from "next/router";
 import { IoSearchOutline as SearchIcon } from "react-icons/io5";
-import { HiOutlineEllipsisHorizontal as EllipsisIcon } from "react-icons/hi2";
+import {
+  HiOutlineEllipsisHorizontal as EllipsisIcon,
+  HiOutlineCheckCircle as ApproveIcon,
+  HiOutlineXCircle    as RejectIcon,
+  HiOutlineEye        as ViewIcon,
+} from "react-icons/hi2";
 
 const STATUS_FILTERS = [
   { label: "All", value: "" },
@@ -25,20 +30,45 @@ function StatusPill({ status }) {
   );
 }
 
-function ActionsMenu({ record, onApprove, onReject }) {
-  const canAct = record.status !== "approved";
-  if (!canAct) return <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>—</span>;
+function ActionsMenu({ record, onApprove, onReject, onView }) {
+  const [hovered, setHovered] = useState(null);
+
+  const item = (key, Icon, label, color, hoverBg, onClick) => (
+    <button
+      key={key}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(key)}
+      onMouseLeave={() => setHovered(null)}
+      style={{
+        display: "flex", alignItems: "center", gap: 8,
+        width: "100%", padding: "9px 12px", border: "none",
+        borderRadius: 6, background: hovered === key ? hoverBg : "transparent",
+        color, fontSize: "0.82rem", fontWeight: 500,
+        cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+        transition: "background 0.1s",
+      }}
+    >
+      <Icon size={15} style={{ flexShrink: 0 }} />
+      {label}
+    </button>
+  );
+
+  const divider = <div style={{ height: 1, background: "#f3f4f6", margin: "2px 4px" }} />;
+
   return (
-    <div className="action__menu">
-      {record.status !== "approved" && (
-        <div className="action__item success" onClick={() => onApprove(record)}>
-          Approve
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", padding: 4, minWidth: 168 }}>
+      {item("view",    ViewIcon,    "View Details", "#374151", "#f3f4f6", () => onView(record))}
+      {(record.status === "pending" || record.status === "rejected") && (
+        <>
+          {divider}
+          {item("approve", ApproveIcon, "Approve",      "#15803d", "#f0fdf4", () => onApprove(record))}
+        </>
       )}
-      {record.status !== "approved" && (
-        <div className="action__item danger" onClick={() => onReject(record)}>
-          Reject
-        </div>
+      {record.status !== "rejected" && (
+        <>
+          {divider}
+          {item("reject",  RejectIcon,  "Reject",       "#dc2626", "#fef2f2", () => onReject(record))}
+        </>
       )}
     </div>
   );
@@ -126,6 +156,7 @@ export default function AllKyc() {
           content={
             <ActionsMenu
               record={record}
+              onView={(r) => router.push(`/kyc/${r.id}`)}
               onApprove={(r) => approveMut.mutate(r.id)}
               onReject={(r) => { setRejectTarget(r); setRejectReason(""); }}
             />
