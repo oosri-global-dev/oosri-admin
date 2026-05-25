@@ -189,7 +189,7 @@ export default function DashboardLayout({ children, title, showBackBtn, titleSub
         {/* Logo row */}
         <div className="sidebar__logo">
           <Link href="/dashboard" className="logo__link">
-            <Image src={Logo} alt="Oosri Admin" width={88} height={28} style={{ objectFit: "contain" }} />
+            <img src={Logo.src} alt="Oosri Admin" style={{ height: 28, objectFit: "contain" }} />
           </Link>
           <button
             className="collapse__btn"
