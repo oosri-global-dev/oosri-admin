@@ -93,6 +93,8 @@ export const AllReviewsWrapper = styled.div`
   .action__menu {
     display: flex; flex-direction: column; gap: 4px; min-width: 160px;
     .action__item {
+      width: 100%; text-align: left; font-family: inherit;
+      border: none; background: none;
       padding: 8px 12px; font-size: 0.82rem; cursor: pointer;
       border-radius: 6px; color: #374151; font-weight: 500;
       transition: background 0.12s;

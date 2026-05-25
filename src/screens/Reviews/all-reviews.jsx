@@ -184,10 +184,9 @@ export default function AllReviews() {
       width: 48,
       render: (_, record) => (
         <Popover
-          trigger="click"
           placement="bottomRight"
           open={openPopoverId === record.id}
-          onOpenChange={(visible) => setOpenPopoverId(visible ? record.id : null)}
+          onOpenChange={(visible) => { if (!visible) setOpenPopoverId(null); }}
           content={
             <ActionsMenu
               record={record}
@@ -198,6 +197,10 @@ export default function AllReviews() {
           }
         >
           <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenPopoverId(openPopoverId === record.id ? null : record.id);
+            }}
             style={{
               background: "none",
               border: "none",
