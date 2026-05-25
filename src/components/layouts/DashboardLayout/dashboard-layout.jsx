@@ -34,6 +34,7 @@ import { MdAdminPanelSettings as AdminsIcon } from "react-icons/md";
 import { TbArrowBackUp as ReturnsIcon } from "react-icons/tb";
 import { MdVerifiedUser as KycIcon } from "react-icons/md";
 import { MdOutlineHistory as AuditLogIcon } from "react-icons/md";
+import { MdOutlineRateReview as ReviewsIcon } from "react-icons/md";
 
 const NAV_GROUPS = [
   {
@@ -46,8 +47,9 @@ const NAV_GROUPS = [
   {
     group: "Commerce",
     items: [
-      { key: "/order",    icon: OrdersIcon,   label: "Orders",   href: "/order",    permission: "orders" },
+      { key: "/order",    icon: OrdersIcon,   label: "Orders",   href: "/order",    permission: "orders"   },
       { key: "/products", icon: ProductsIcon, label: "Products", href: "/products", permission: "products" },
+      { key: "/reviews",  icon: ReviewsIcon,  label: "Reviews",  href: "/reviews",  permission: "products" },
     ],
   },
   {
@@ -127,6 +129,7 @@ export default function DashboardLayout({ children, title, showBackBtn, titleSub
     if (pathname.startsWith("/settings/shipping"))   return "/settings/shipping";
     if (pathname.startsWith("/settings/api-status")) return "/settings/api-status";
     if (pathname.startsWith("/settings/platform"))   return "/settings/platform";
+    if (pathname.includes("/reviews"))               return "/reviews";
     if (pathname.includes("/product"))               return "/products";
     if (pathname.includes("/order"))                 return "/order";
     if (pathname.includes("/sales") || pathname.includes("/analytics")) return "/sales-analytics";

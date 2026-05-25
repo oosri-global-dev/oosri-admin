@@ -81,6 +81,7 @@ function ActionMenu({ product, onApprove, onReject }) {
 }
 
 export default function AllProductsScreen() {
+  const router = useRouter();
   const [search,      setSearch]      = useState("");
   const [sort,        setSort]        = useState("newest");
   const [statusTab,   setStatusTab]   = useState("");
@@ -94,6 +95,16 @@ export default function AllProductsScreen() {
   const pagination = data?.body?.pagination || {};
   const qc         = useQueryClient();
   const [success, error] = useNotification();
+
+  // Pre-filter from URL query param — supports dashboard deep-links like /products?status=pending
+  useEffect(() => {
+    const { status } = router.query;
+    const valid = STATUS_TABS.map((t) => t.key);
+    if (status && valid.includes(status) && status !== statusTab) {
+      setStatusTab(status);
+      setFilters((p) => ({ ...p, productStatus: status, page: 1 }));
+    }
+  }, [router.query]);
 
   useEffect(() => {
     if (data?.body?.products?.length) setProducts(data.body.products);
