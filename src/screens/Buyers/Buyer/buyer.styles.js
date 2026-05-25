@@ -109,6 +109,28 @@ export const BuyerWrapper = styled.div`
     }
   }
 
+  /* AntD Tabs overrides */
+  .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--oosriPrimary) !important; }
+  .ant-tabs-ink-bar { background: var(--oosriPrimary) !important; }
+  .ant-tabs-nav::before { border-bottom: 1px solid #e5e7eb !important; }
+
+  .ant-table-thead > tr > th {
+    background: #f8fafc !important;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  .ant-table-tbody > tr > td {
+    font-size: 0.84rem;
+    color: #374151;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 12px 16px;
+  }
+  .ant-table-tbody > tr:hover > td { background: #fafbfc !important; }
+
   .addresses__card {
     background: #fff;
     border: 1px solid #e5e7eb;

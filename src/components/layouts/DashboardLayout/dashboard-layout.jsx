@@ -33,6 +33,7 @@ import { usePermission } from "@/hooks/usePermission";
 import { MdAdminPanelSettings as AdminsIcon } from "react-icons/md";
 import { TbArrowBackUp as ReturnsIcon } from "react-icons/tb";
 import { MdVerifiedUser as KycIcon } from "react-icons/md";
+import { MdOutlineHistory as AuditLogIcon } from "react-icons/md";
 
 const NAV_GROUPS = [
   {
@@ -84,7 +85,8 @@ const NAV_GROUPS = [
   {
     group: "Admin",
     items: [
-      { key: "/admins", icon: AdminsIcon, label: "Manage Admins", href: "/admins", superAdminOnly: true },
+      { key: "/admins",    icon: AdminsIcon,  label: "Manage Admins", href: "/admins",    superAdminOnly: true },
+      { key: "/audit-log", icon: AuditLogIcon, label: "Audit Log",    href: "/audit-log", superAdminOnly: true },
     ],
   },
   {
@@ -136,6 +138,7 @@ export default function DashboardLayout({ children, title, showBackBtn, titleSub
     if (pathname.includes("/fx-rate"))               return "/fx-rate";
     if (pathname.includes("/return"))               return "/returns";
     if (pathname.includes("/kyc"))                  return "/kyc";
+    if (pathname.includes("/audit-log"))              return "/audit-log";
     if (pathname.includes("/profile"))               return "/profile";
     if (pathname.includes("/admin"))                 return "/admins";
     return pathname;

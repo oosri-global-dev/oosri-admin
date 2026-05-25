@@ -2,9 +2,10 @@ import { instance } from './axios';
 export const getOrders = async (params = {}) => {
   const { data } = await instance.get('/admin/order/all', {
     params: {
-      ...params,
       skip: params.skip || 0,
       limit: params.limit || 10,
+      ...(params.orderStatus ? { orderStatus: params.orderStatus } : {}),
+      ...(params.buyerId     ? { buyerId:      params.buyerId     } : {}),
     },
   });
   return data;

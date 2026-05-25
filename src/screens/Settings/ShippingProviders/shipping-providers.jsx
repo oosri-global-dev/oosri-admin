@@ -1,12 +1,15 @@
-import { useState } from "react";
-import { Switch, Select, Input, Divider, Spin, Tag } from "antd";
+import { useState, useRef } from "react";
+import { Switch, Select, Input, Divider, Spin, Tag, Modal } from "antd";
 import { ShippingWrapper } from "./shipping-providers.styles";
 import { LuTruck as TruckIcon } from "react-icons/lu";
 import { MdOutlineSave as SaveIcon } from "react-icons/md";
 import { MdOutlineWifi as TestIcon } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { MdOutlineAdd as AddIcon } from "react-icons/md";
 import useNotification from "@/hooks/useNotification";
 import { useSettings, useUpdateSettings, useTestShippingProvider } from "@/hooks/useSettings";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getCouriers, createCourier, deleteCourier } from "@/network/couriers";
 
 const { Option } = Select;
 
@@ -119,6 +122,144 @@ function ProviderCard({ provider, values, onChange, onTest, testing }) {
   );
 }
 
+function CourierManagement() {
+  const qc = useQueryClient();
+  const [success, error] = useNotification();
+  const fileInputRef = useRef(null);
+  const [nameInput, setNameInput] = useState("");
+  const [pendingFile, setPendingFile] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["couriers"],
+    queryFn: getCouriers,
+    staleTime: 2 * 60 * 1000,
+  });
+  const couriers = data?.body || [];
+
+  const { mutate: doDelete } = useMutation({
+    mutationFn: (id) => deleteCourier(id),
+    onSuccess: () => { success("Courier removed."); qc.invalidateQueries({ queryKey: ["couriers"] }); },
+    onError:   () => error("Failed to remove courier."),
+  });
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingFile(file);
+    setModalOpen(true);
+    e.target.value = "";
+  };
+
+  const handleAdd = async () => {
+    if (!nameInput.trim() || !pendingFile) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("name", nameInput.trim());
+      fd.append("image", pendingFile);
+      await createCourier(fd);
+      qc.invalidateQueries({ queryKey: ["couriers"] });
+      success("Courier added.");
+      setModalOpen(false);
+      setNameInput("");
+      setPendingFile(null);
+    } catch {
+      error("Failed to add courier. Name may already be taken.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = (id, name) => {
+    Modal.confirm({
+      title: "Remove this courier?",
+      content: `"${name}" will no longer appear as a shipping option.`,
+      okText: "Remove",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: () => doDelete(id),
+    });
+  };
+
+  return (
+    <>
+      <div className="couriers__section">
+        <div className="couriers__header">
+          <div>
+            <p style={{ margin: 0, fontSize: ".78rem", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".05em" }}>Marketplace Couriers</p>
+            <p style={{ margin: "2px 0 0", fontSize: ".8rem", color: "#9ca3af" }}>Courier logos displayed on the marketplace shipping selection.</p>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div style={{ padding: 32, display: "flex", justifyContent: "center" }}><Spin /></div>
+        ) : (
+          <div className="couriers__grid">
+            {couriers.map((c) => (
+              <div className="courier__item" key={c.id}>
+                {c.image
+                  ? <img src={c.image} alt={c.name} />
+                  : <div style={{ width: 52, height: 52, background: "#f1f5f9", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}><TruckIcon size={22} color="#9ca3af" /></div>
+                }
+                <span className="courier__name">{c.name}</span>
+                <button className="courier__delete" onClick={() => handleDelete(c.id, c.name)}>✕</button>
+              </div>
+            ))}
+
+            <button className="courier__add__btn" onClick={() => fileInputRef.current?.click()}>
+              <AddIcon size={20} />
+              Add Courier
+            </button>
+          </div>
+        )}
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden__input"
+        onChange={handleFileChange}
+      />
+
+      <Modal
+        title="Add Courier Service"
+        open={modalOpen}
+        onCancel={() => { setModalOpen(false); setPendingFile(null); setNameInput(""); }}
+        onOk={handleAdd}
+        okText={uploading ? "Adding…" : "Add Courier"}
+        confirmLoading={uploading}
+        okButtonProps={{ disabled: !nameInput.trim() }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "8px 0" }}>
+          {pendingFile && (
+            <div style={{ textAlign: "center" }}>
+              <img
+                src={URL.createObjectURL(pendingFile)}
+                alt="preview"
+                style={{ width: 80, height: 80, objectFit: "contain", borderRadius: 8, border: "1px solid #e2e8f0" }}
+              />
+            </div>
+          )}
+          <div>
+            <label style={{ fontSize: ".8rem", fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Courier Name</label>
+            <Input
+              placeholder="e.g. GIG Logistics"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onPressEnter={handleAdd}
+              size="large"
+              style={{ borderRadius: 8 }}
+            />
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
 export default function ShippingProvidersScreen() {
   const [success, error] = useNotification();
   const { data, isLoading } = useSettings();
@@ -161,7 +302,7 @@ export default function ShippingProvidersScreen() {
     <ShippingWrapper>
       <div className="page__intro">
         <h2 className="section__title">Shipping Providers</h2>
-        <p className="section__sub">Enable and configure DHL, FedEx, and Haulam logistics integrations.</p>
+        <p className="section__sub">Enable and configure logistics integrations and manage marketplace courier options.</p>
       </div>
 
       <div className="providers__list">
@@ -183,6 +324,8 @@ export default function ShippingProvidersScreen() {
           {isSaving ? "Saving…" : "Save Changes"}
         </button>
       </div>
+
+      <CourierManagement />
     </ShippingWrapper>
   );
 }

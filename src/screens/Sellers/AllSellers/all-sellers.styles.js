@@ -80,6 +80,36 @@ export const AllSellersWrapper = styled.div`
     }
   }
 
+  /* tab bar */
+  .tab__bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0 20px;
+  }
+
+  .tab__btn {
+    height: 42px;
+    padding: 0 16px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+
+    &:hover { color: var(--oosriPrimary); }
+    &.active {
+      color: var(--oosriPrimary);
+      border-bottom-color: var(--oosriPrimary);
+      font-weight: 600;
+    }
+  }
+
   /* status pills */
   .pill {
     display: inline-flex;
@@ -100,6 +130,7 @@ export const AllSellersWrapper = styled.div`
 
     &.verified   { background: #f0fdf4; color: #16a34a; .dot { background: #16a34a; } }
     &.unverified { background: #fff7ed; color: #b45309; .dot { background: #f59e0b; } }
+    &.suspended  { background: #fee2e2; color: #dc2626; .dot { background: #dc2626; } }
   }
 
   /* seller name cell */
@@ -173,8 +204,4 @@ export const AllSellersWrapper = styled.div`
     background: #fafbfc !important;
   }
 
-  .ant-tabs-nav { padding: 0 20px; margin-bottom: 0 !important; }
-  .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--oosriPrimary) !important; }
-  .ant-tabs-ink-bar { background: var(--oosriPrimary); }
-  .ant-tabs-nav::before { border-bottom: 1px solid #e2e8f0 !important; }
 `;

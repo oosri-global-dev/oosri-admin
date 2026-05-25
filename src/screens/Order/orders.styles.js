@@ -6,6 +6,39 @@ export const OrderWrapper = styled.div`
   border-radius: 12px;
   overflow: hidden;
 
+  .status__tabs__bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  .status__tab {
+    height: 42px;
+    padding: 0 14px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+
+    &:hover { color: var(--oosriPrimary); }
+    &.active {
+      color: var(--oosriPrimary);
+      border-bottom-color: var(--oosriPrimary);
+      font-weight: 600;
+    }
+  }
+
   .toolbar {
     display: flex;
     align-items: center;

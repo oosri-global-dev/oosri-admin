@@ -1,10 +1,12 @@
-import { Tabs, Avatar, Tag, Spin, Modal } from 'antd';
+import { Tabs, Avatar, Tag, Spin, Modal, Table } from 'antd';
 import { useSeller } from '@/hooks/useSeller';
+import { useProducts } from '@/hooks/useProducts';
 import { formatDate, formatISODateWithOrdinal } from '@/utils/format-date';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteSeller, suspendSeller, unsuspendSeller } from '@/network/sellers';
 import { useRouter } from 'next/router';
 import useNotification from '@/hooks/useNotification';
+import Link from 'next/link';
 
 function InfoRow({ label, value }) {
   if (!value) return null;
@@ -116,6 +118,81 @@ function BankTab({ bank }) {
       <InfoRow label="Bank"           value={bank.bank} />
       <InfoRow label="Account Number" value={bank.accountNumber} />
     </Card>
+  );
+}
+
+const APPROVAL_STYLES = {
+  pending:  { bg: '#fef9c3', color: '#a16207' },
+  approved: { bg: '#dcfce7', color: '#16a34a' },
+  rejected: { bg: '#fee2e2', color: '#dc2626' },
+};
+
+function ProductsTab({ sellerId }) {
+  const { data, isLoading } = useProducts({ sellerId, limit: 20, page: 1 });
+  const products = data?.body?.products || data?.data?.body?.products || [];
+
+  const columns = [
+    {
+      title: 'Product',
+      key: 'product',
+      render: (_, p) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {p.images?.[0] && (
+            <img src={p.images[0]} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid #e2e8f0', flexShrink: 0 }} />
+          )}
+          <span style={{ fontSize: '.84rem', fontWeight: 600, color: '#111827' }}>{p.productName || '—'}</span>
+        </div>
+      ),
+    },
+    {
+      title: 'Category',
+      key: 'category',
+      render: (_, p) => <span style={{ fontSize: '.78rem', color: '#6b7280' }}>{p.category || '—'}</span>,
+    },
+    {
+      title: 'Price',
+      key: 'price',
+      render: (_, p) => (
+        <span style={{ fontSize: '.84rem', fontWeight: 600, color: '#111827' }}>
+          {p.regularPrice != null ? `₦${Number(p.regularPrice).toLocaleString()}` : '—'}
+        </span>
+      ),
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      render: (_, p) => {
+        const s = APPROVAL_STYLES[p.productStatus] || APPROVAL_STYLES.pending;
+        return (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 20, fontSize: '.72rem', fontWeight: 700, background: s.bg, color: s.color }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: s.color }} />
+            {p.productStatus ? p.productStatus.charAt(0).toUpperCase() + p.productStatus.slice(1) : 'Pending'}
+          </span>
+        );
+      },
+    },
+    {
+      title: '',
+      key: 'action',
+      width: 60,
+      render: (_, p) => (
+        <Link href={`/product/${p.id}`} style={{ fontSize: '.78rem', color: 'var(--oosriPrimary)', fontWeight: 600, textDecoration: 'none' }}>
+          View
+        </Link>
+      ),
+    },
+  ];
+
+  if (isLoading) return <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}><Spin /></div>;
+
+  return (
+    <Table
+      rowKey="id"
+      columns={columns}
+      dataSource={products}
+      pagination={{ pageSize: 10, showSizeChanger: false }}
+      locale={{ emptyText: 'No products listed by this seller.' }}
+    />
   );
 }
 
@@ -251,6 +328,7 @@ export default function Seller({ sellerId }) {
           { key: 'personal', label: 'Personal Details',  children: <PersonalTab  d={d} personal={personal} /> },
           { key: 'business', label: 'Business Details',  children: <BusinessTab  business={business} /> },
           { key: 'bank',     label: 'Bank Details',      children: <BankTab      bank={bank} /> },
+          { key: 'products', label: 'Products',          children: <ProductsTab  sellerId={sellerId} /> },
         ]}
         style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '8px 20px 20px' }}
       />
