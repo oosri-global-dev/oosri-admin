@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import "@/styles/vars.css";
+import Head from "next/head";
 import useOnlineStatus from "@/hooks/useOnlineStatus";
 import useNotification from "@/hooks/useNotification";
 import { useContext, useEffect, useState } from "react";
@@ -75,6 +76,10 @@ export default function App({ Component, pageProps }) {
 
   return (
     <MainProvider>
+      <Head>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+      </Head>
       <StyledComponentsRegistry>
         <QueryClientProvider client={queryClient}>
           <AntdApp>

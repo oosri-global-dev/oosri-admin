@@ -1,6 +1,5 @@
 import { useState, useContext } from "react";
 import { useRouter } from "next/router";
-import Image from "next/image";
 import { LoginPageWrapper } from "./login.styles";
 import { handleLogin, handleVerifyLoginOTP } from "@/network/user";
 import useNotification from "@/hooks/useNotification";
@@ -70,7 +69,8 @@ export default function LoginPage() {
 
       <div className="login__card">
         <div className="card__logo">
-          <Image src={Logo} alt="Oosri" height={36} style={{ width: "auto" }} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={Logo.src} alt="Oosri" />
         </div>
 
         <div className="card__heading">
