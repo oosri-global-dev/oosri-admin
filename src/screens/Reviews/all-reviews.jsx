@@ -131,6 +131,7 @@ export default function AllReviews() {
     {
       title: "Reviewer",
       key: "reviewer",
+      width: 200,
       render: (_, r) => (
         <div>
           <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#111827" }}>
@@ -145,6 +146,7 @@ export default function AllReviews() {
     {
       title: "Product",
       key: "product",
+      width: 160,
       render: (_, r) => (
         <span style={{ fontSize: "0.82rem", color: "#374151" }}>
           {r.product?.name || "—"}
@@ -154,11 +156,13 @@ export default function AllReviews() {
     {
       title: "Rating",
       key: "rating",
+      width: 120,
       render: (_, r) => <StarRow rating={r.productRating} />,
     },
     {
       title: "Review",
       key: "review",
+      width: 300,
       render: (_, r) => (
         <span className="review__snippet" title={r.review}>
           {r.review || <span style={{ color: "#d1d5db" }}>No text</span>}
@@ -168,11 +172,13 @@ export default function AllReviews() {
     {
       title: "Status",
       dataIndex: "status",
+      width: 110,
       render: (v) => <StatusPill status={v} />,
     },
     {
       title: "Date",
       dataIndex: "reviewDate",
+      width: 130,
       render: (v) =>
         v
           ? new Date(v).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
@@ -181,7 +187,7 @@ export default function AllReviews() {
     {
       title: "",
       key: "actions",
-      width: 48,
+      width: 52,
       render: (_, record) => (
         <Popover
           placement="bottomRight"
@@ -261,6 +267,7 @@ export default function AllReviews() {
           columns={columns}
           loading={isLoading}
           pagination={false}
+          scroll={{ x: "max-content" }}
           locale={{ emptyText: "No reviews found." }}
         />
         {total > 20 && (
