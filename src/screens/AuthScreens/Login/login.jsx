@@ -70,7 +70,7 @@ export default function LoginPage() {
 
       <div className="login__card">
         <div className="card__logo">
-          <Image src={Logo} alt="Oosri" height={36} />
+          <Image src={Logo} alt="Oosri" height={36} style={{ width: "auto" }} />
         </div>
 
         <div className="card__heading">
