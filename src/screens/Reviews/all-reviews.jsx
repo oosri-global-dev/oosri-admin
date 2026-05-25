@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Table, Pagination, Popover, Modal, message } from "antd";
+import { Table, Pagination, Popover, Modal } from "antd";
 import { AllReviewsWrapper } from "./all-reviews.styles";
 import { getReviews, moderateReview, deleteReview } from "@/network/reviews";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IoSearchOutline as SearchIcon } from "react-icons/io5";
 import { HiOutlineEllipsisHorizontal as EllipsisIcon } from "react-icons/hi2";
 import { AiFillStar as StarIcon } from "react-icons/ai";
+import useNotification from "@/hooks/useNotification";
 
 const STATUS_FILTERS = [
   { label: "All",     value: "" },
@@ -34,27 +35,27 @@ function StatusPill({ status }) {
   );
 }
 
-function ActionsMenu({ record, onModerate, onDelete }) {
+function ActionsMenu({ record, onModerate, onDelete, onClose }) {
   return (
     <div className="action__menu">
       {record.status !== "active" && (
-        <div className="action__item success" onClick={() => onModerate(record, "active")}>
+        <button className="action__item success" onClick={() => { onModerate(record, "active"); onClose(); }}>
           Approve (make active)
-        </div>
+        </button>
       )}
       {record.status !== "flagged" && (
-        <div className="action__item warn" onClick={() => onModerate(record, "flagged")}>
+        <button className="action__item warn" onClick={() => { onModerate(record, "flagged"); onClose(); }}>
           Flag for review
-        </div>
+        </button>
       )}
       {record.status !== "hidden" && (
-        <div className="action__item warn" onClick={() => onModerate(record, "hidden")}>
+        <button className="action__item warn" onClick={() => { onModerate(record, "hidden"); onClose(); }}>
           Hide review
-        </div>
+        </button>
       )}
-      <div className="action__item danger" onClick={() => onDelete(record)}>
+      <button className="action__item danger" onClick={() => { onDelete(record); onClose(); }}>
         Delete permanently
-      </div>
+      </button>
     </div>
   );
 }
@@ -70,10 +71,12 @@ function useReviews({ status, page, limit }) {
 
 export default function AllReviews() {
   const qc = useQueryClient();
+  const [success, error] = useNotification();
   const [page, setPage]           = useState(1);
   const [search, setSearch]       = useState("");
   const [debounced, setDebounced] = useState("");
   const [statusFilter, setStatus] = useState("");
+  const [openPopoverId, setOpenPopoverId] = useState(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 350);
@@ -96,18 +99,18 @@ export default function AllReviews() {
     mutationFn: ({ id, status }) => moderateReview(id, status),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-reviews"] });
-      message.success("Review status updated");
+      success("Review status updated");
     },
-    onError: (err) => message.error(err?.response?.data?.message || "Failed to update"),
+    onError: () => error("Failed to update review"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteReview(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-reviews"] });
-      message.success("Review deleted");
+      success("Review deleted");
     },
-    onError: (err) => message.error(err?.response?.data?.message || "Failed to delete"),
+    onError: () => error("Failed to delete review"),
   });
 
   const handleModerate = (record, status) => {
@@ -183,20 +186,33 @@ export default function AllReviews() {
         <Popover
           trigger="click"
           placement="bottomRight"
+          open={openPopoverId === record.id}
+          onOpenChange={(visible) => setOpenPopoverId(visible ? record.id : null)}
           content={
             <ActionsMenu
               record={record}
               onModerate={handleModerate}
               onDelete={handleDelete}
+              onClose={() => setOpenPopoverId(null)}
             />
           }
         >
           <button
-            onClick={(e) => e.stopPropagation()}
             style={{
-              background: "none", border: "none",
-              cursor: "pointer", padding: 4, borderRadius: 6,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              color: "#9ca3af",
+              padding: 0,
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#374151"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#9ca3af"; }}
           >
             <EllipsisIcon size={18} />
           </button>
@@ -242,17 +258,20 @@ export default function AllReviews() {
           columns={columns}
           loading={isLoading}
           pagination={false}
+          locale={{ emptyText: "No reviews found." }}
         />
-        <div className="pagination__row">
-          <Pagination
-            current={page}
-            pageSize={20}
-            total={total}
-            onChange={setPage}
-            showSizeChanger={false}
-            size="small"
-          />
-        </div>
+        {total > 20 && (
+          <div className="pagination__row">
+            <Pagination
+              current={page}
+              pageSize={20}
+              total={total}
+              onChange={setPage}
+              showSizeChanger={false}
+              size="small"
+            />
+          </div>
+        )}
       </div>
     </AllReviewsWrapper>
   );
