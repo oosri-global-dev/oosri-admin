@@ -44,3 +44,8 @@ export const toggleProductVisibility = async (id, payload) => {
   const { data } = await instance.patch(`products/admin/${id}/visibility`, payload);
   return data;
 };
+
+export const approveProduct = async (productId, action) => {
+  const { data } = await instance.post(`/products/admin/${productId}`, { action });
+  return data;
+};

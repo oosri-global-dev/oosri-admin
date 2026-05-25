@@ -1,6 +1,10 @@
-import { Tabs, Avatar, Tag, Spin } from 'antd';
+import { Tabs, Avatar, Tag, Spin, Modal } from 'antd';
 import { useSeller } from '@/hooks/useSeller';
 import { formatDate, formatISODateWithOrdinal } from '@/utils/format-date';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteSeller, suspendSeller, unsuspendSeller } from '@/network/sellers';
+import { useRouter } from 'next/router';
+import useNotification from '@/hooks/useNotification';
 
 function InfoRow({ label, value }) {
   if (!value) return null;
@@ -116,8 +120,55 @@ function BankTab({ bank }) {
 }
 
 export default function Seller({ sellerId }) {
-  const { data, isLoading } = useSeller(sellerId);
-  const d = data?.data?.body || {};
+  const { data, isLoading, refetch } = useSeller(sellerId);
+  const d   = data?.data?.body || {};
+  const qc  = useQueryClient();
+  const router = useRouter();
+  const [success, error] = useNotification();
+
+  const { mutate: doDelete, isLoading: deleting } = useMutation({
+    mutationFn: () => deleteSeller(sellerId),
+    onSuccess: () => {
+      success('Seller deleted.');
+      qc.invalidateQueries({ queryKey: ['sellers'] });
+      router.push('/sellers');
+    },
+    onError: () => error('Failed to delete seller.'),
+  });
+
+  const { mutate: doSuspend, isLoading: suspending } = useMutation({
+    mutationFn: () => suspendSeller(sellerId, 'Suspended by admin'),
+    onSuccess: () => { success('Seller suspended.'); refetch(); qc.invalidateQueries({ queryKey: ['sellers'] }); },
+    onError:   () => error('Failed to suspend seller.'),
+  });
+
+  const { mutate: doUnsuspend, isLoading: unsuspending } = useMutation({
+    mutationFn: () => unsuspendSeller(sellerId),
+    onSuccess: () => { success('Seller unsuspended.'); refetch(); qc.invalidateQueries({ queryKey: ['sellers'] }); },
+    onError:   () => error('Failed to unsuspend seller.'),
+  });
+
+  const handleDelete = () => {
+    Modal.confirm({
+      title: 'Delete this seller?',
+      content: 'All their products will be permanently removed. This cannot be undone.',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: () => doDelete(),
+    });
+  };
+
+  const handleSuspend = () => {
+    Modal.confirm({
+      title: 'Suspend this seller?',
+      content: 'The seller will lose access to their account.',
+      okText: 'Suspend',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: () => doSuspend(),
+    });
+  };
 
   const personal = {
     firstName: d.firstName, lastName: d.lastName, email: d.email,
@@ -157,9 +208,40 @@ export default function Seller({ sellerId }) {
           </h2>
           <p style={{ margin: 0, fontSize: '.82rem', color: '#6b7280' }}>{d.email}</p>
         </div>
-        <Tag color={d.isVerified ? 'success' : 'warning'} style={{ fontSize: '.78rem', fontWeight: 600 }}>
-          {d.isVerified ? 'Verified Seller' : 'Unverified'}
-        </Tag>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          {d.isSuspended && (
+            <Tag color="error" style={{ fontSize: '.78rem', fontWeight: 600 }}>Suspended</Tag>
+          )}
+          <Tag color={d.isVerified ? 'success' : 'warning'} style={{ fontSize: '.78rem', fontWeight: 600 }}>
+            {d.isVerified ? 'Verified Seller' : 'Unverified'}
+          </Tag>
+          {d.isSuspended
+            ? (
+              <button
+                onClick={() => doUnsuspend()}
+                disabled={unsuspending || deleting}
+                style={{ height: 32, padding: '0 14px', background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac', borderRadius: 7, fontSize: '.8rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: unsuspending ? 0.6 : 1 }}
+              >
+                {unsuspending ? 'Unsuspending…' : 'Unsuspend'}
+              </button>
+            ) : (
+              <button
+                onClick={handleSuspend}
+                disabled={suspending || deleting}
+                style={{ height: 32, padding: '0 14px', background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a', borderRadius: 7, fontSize: '.8rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: suspending ? 0.6 : 1 }}
+              >
+                {suspending ? 'Suspending…' : 'Suspend'}
+              </button>
+            )
+          }
+          <button
+            onClick={handleDelete}
+            disabled={deleting || suspending || unsuspending}
+            style={{ height: 32, padding: '0 14px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: 7, fontSize: '.8rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: deleting ? 0.6 : 1 }}
+          >
+            {deleting ? 'Deleting…' : 'Delete Seller'}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

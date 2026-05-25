@@ -28,3 +28,18 @@ export const getSeller = async (sellerId) => {
     throw error;
   }
 };
+
+export const deleteSeller = async (sellerId) => {
+  const { data } = await instance.delete(`/admin/sellers/${sellerId}`);
+  return data;
+};
+
+export const suspendSeller = async (sellerId, reason) => {
+  const { data } = await instance.patch(`/admin/sellers/${sellerId}/suspend`, { reason });
+  return data;
+};
+
+export const unsuspendSeller = async (sellerId) => {
+  const { data } = await instance.patch(`/admin/sellers/${sellerId}/unsuspend`);
+  return data;
+};
