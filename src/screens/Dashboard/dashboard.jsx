@@ -23,7 +23,7 @@ const KPI_DEFS = [
   { key: "totalSellers",      label: "Total Sellers",      icon: SellersIcon,  color: "#8b5cf6", bg: "#f5f3ff" },
   { key: "totalOrders",       label: "Total Orders",       icon: OrdersIcon,   color: "#f59e0b", bg: "#fffbeb" },
   { key: "totalProductsSold", label: "Products Sold",      icon: ProductsIcon, color: "#10b981", bg: "#ecfdf5" },
-  { key: "totalSales",        label: "Total Revenue",      icon: RevenueIcon,  color: "#fc5353", bg: "#fff1f2" },
+  { key: "totalSales",        label: "Platform Revenue",   icon: RevenueIcon,  color: "#fc5353", bg: "#fff1f2" },
 ];
 
 // Pending action cards — each links to the relevant admin page
