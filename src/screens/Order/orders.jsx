@@ -97,11 +97,11 @@ export default function OrderScreen() {
       render: (v) => v || "—",
     },
     {
-      title: `Amount (${currency === "USD" ? "$" : "₦"})`,
+      title: "Amount",
       key: "amount",
       render: (_, row) => (
         <span className="amount__cell">
-          {currency === "USD" ? row.formattedAmountUSD : row.formattedAmountNGN}
+          {row.currencyCode === "USD" ? row.formattedAmountUSD : row.formattedAmountNGN}
         </span>
       ),
     },
@@ -154,17 +154,6 @@ export default function OrderScreen() {
             placeholder="Search orders…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="toolbar__right">
-          <Select
-            value={currency}
-            onChange={(v) => dispatch({ type: SET_CURRENCY, payload: v })}
-            style={{ width: 110 }}
-            options={[
-              { value: "NGN", label: "NGN (₦)" },
-              { value: "USD", label: "USD ($)" },
-            ]}
           />
         </div>
       </div>

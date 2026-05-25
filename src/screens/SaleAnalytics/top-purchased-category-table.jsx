@@ -2,6 +2,7 @@ import { Table, Avatar, Spin, Alert, Popover } from "antd";
 import { HiOutlineEllipsisHorizontal as EllipsisIcon } from "react-icons/hi2";
 import { useRouter } from "next/router";
 import { useTopPurchasedProducts } from "@/hooks/useAnalytics";
+import { formatCurrency } from "@/utils/format-currency";
 
 const TopPurchasedCategoriesTable = ({ period, category }) => {
   const { data, isLoading, error } = useTopPurchasedProducts(period, category);
@@ -42,7 +43,7 @@ const TopPurchasedCategoriesTable = ({ period, category }) => {
       key: "totalAmountSold",
       render: (v) => (
         <span style={{ fontSize: ".84rem", fontWeight: 600, color: "#111827" }}>
-          ${(v || 0).toFixed(2)}
+          {formatCurrency(v || 0, 'NGN')}
         </span>
       ),
     },

@@ -125,7 +125,9 @@ export default function OrderDetails({ data, isLoading }) {
                     <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: '.9rem', color: '#111827' }}>{item?.productName || '—'}</p>
                     <p style={{ margin: '0 0 2px', fontSize: '.8rem', color: '#6b7280' }}>ID: {item?.productId}</p>
                     <p style={{ margin: 0, fontSize: '.84rem', fontWeight: 600, color: '#fc5353' }}>
-                      {item?.formattedProductAmountNGN || item?.productAmount || '—'}
+                      {data?.currencyCode === 'USD'
+                        ? (item?.formattedProductAmountUSD || '—')
+                        : (item?.formattedProductAmountNGN || item?.productAmount || '—')}
                     </p>
                   </div>
                 </div>
@@ -145,12 +147,20 @@ export default function OrderDetails({ data, isLoading }) {
         {/* Right: order summary */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <Card title="Order Summary">
-            <InfoRow label="Subtotal"      value={data?.formattedAmountNGN} />
-            <InfoRow label="Delivery Fee"  value={data?.formattedDeliveryFeeNGN || '₦0.00'} />
+            <InfoRow
+              label="Subtotal"
+              value={data?.currencyCode === 'USD' ? data?.formattedAmountUSD : data?.formattedAmountNGN}
+            />
+            <InfoRow
+              label="Delivery Fee"
+              value={data?.formattedDeliveryFeeNGN || (data?.currencyCode === 'USD' ? '$0.00' : '₦0.00')}
+            />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, marginTop: 4 }}>
               <span style={{ fontSize: '.88rem', fontWeight: 700, color: '#111827' }}>Total</span>
               <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fc5353' }}>
-                {data?.formattedAmountNGN || '—'}
+                {data?.currencyCode === 'USD'
+                  ? (data?.formattedAmountUSD || '—')
+                  : (data?.formattedAmountNGN || '—')}
               </span>
             </div>
           </Card>
