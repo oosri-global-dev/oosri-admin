@@ -35,27 +35,57 @@ function StatusPill({ status }) {
   );
 }
 
+const menuWrap = {
+  display: "flex", flexDirection: "column", gap: 2, minWidth: 170, padding: 4,
+};
+const menuItemBase = {
+  width: "100%", textAlign: "left", border: "none", background: "none",
+  padding: "8px 12px", borderRadius: 6, fontSize: "0.82rem", fontWeight: 500,
+  cursor: "pointer", fontFamily: "inherit", transition: "background 0.12s",
+};
+const itemColors = {
+  success: { color: "#15803d", hover: "#f0fdf4" },
+  warn:    { color: "#b45309", hover: "#fffbeb" },
+  danger:  { color: "#dc2626", hover: "#fef2f2" },
+  default: { color: "#374151", hover: "#f3f4f6" },
+};
+
+function ActionItem({ variant = "default", onClick, children }) {
+  const [hovered, setHovered] = useState(false);
+  const c = itemColors[variant];
+  return (
+    <button
+      onClick={onClick}
+      style={{ ...menuItemBase, color: c.color, background: hovered ? c.hover : "none" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </button>
+  );
+}
+
 function ActionsMenu({ record, onModerate, onDelete, onClose }) {
   return (
-    <div className="action__menu">
+    <div style={menuWrap}>
       {record.status !== "active" && (
-        <button className="action__item success" onClick={() => { onModerate(record, "active"); onClose(); }}>
+        <ActionItem variant="success" onClick={() => { onModerate(record, "active"); onClose(); }}>
           Approve (make active)
-        </button>
+        </ActionItem>
       )}
       {record.status !== "flagged" && (
-        <button className="action__item warn" onClick={() => { onModerate(record, "flagged"); onClose(); }}>
+        <ActionItem variant="warn" onClick={() => { onModerate(record, "flagged"); onClose(); }}>
           Flag for review
-        </button>
+        </ActionItem>
       )}
       {record.status !== "hidden" && (
-        <button className="action__item warn" onClick={() => { onModerate(record, "hidden"); onClose(); }}>
+        <ActionItem variant="warn" onClick={() => { onModerate(record, "hidden"); onClose(); }}>
           Hide review
-        </button>
+        </ActionItem>
       )}
-      <button className="action__item danger" onClick={() => { onDelete(record); onClose(); }}>
+      <ActionItem variant="danger" onClick={() => { onDelete(record); onClose(); }}>
         Delete permanently
-      </button>
+      </ActionItem>
     </div>
   );
 }
@@ -164,7 +194,7 @@ export default function AllReviews() {
       key: "review",
       width: 300,
       render: (_, r) => (
-        <span className="review__snippet" title={r.review}>
+        <span style={{ fontSize: "0.82rem", color: "#374151", whiteSpace: "normal", wordBreak: "break-word", lineHeight: 1.5 }}>
           {r.review || <span style={{ color: "#d1d5db" }}>No text</span>}
         </span>
       ),
@@ -179,10 +209,12 @@ export default function AllReviews() {
       title: "Date",
       dataIndex: "reviewDate",
       width: 130,
-      render: (v) =>
-        v
-          ? new Date(v).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-          : "—",
+      render: (v) => {
+        if (!v) return "—";
+        const d = new Date(v);
+        if (isNaN(d.getTime())) return v;
+        return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+      },
     },
     {
       title: "",
