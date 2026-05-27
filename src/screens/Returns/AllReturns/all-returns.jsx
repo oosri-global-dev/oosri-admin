@@ -17,12 +17,13 @@ import { IoSettingsOutline as SettingsIcon } from "react-icons/io5";
 import { usePermission } from "@/hooks/usePermission";
 
 const STATUS_FILTERS = [
-  { label: "All", value: "" },
-  { label: "Pending", value: "pending" },
-  { label: "Approved", value: "admin_approved" },
-  { label: "Refunded", value: "refunded" },
-  { label: "Rejected", value: "admin_rejected" },
-  { label: "Closed", value: "closed" },
+  { label: "All",       value: "" },
+  { label: "Pending",   value: "pending" },
+  { label: "Escalated", value: "escalated" },
+  { label: "Approved",  value: "admin_approved" },
+  { label: "Refunded",  value: "refunded" },
+  { label: "Rejected",  value: "admin_rejected" },
+  { label: "Closed",    value: "closed" },
 ];
 
 const STATUS_LABELS = {
