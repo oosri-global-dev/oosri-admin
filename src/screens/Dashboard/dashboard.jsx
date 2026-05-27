@@ -45,7 +45,7 @@ function PlatformRevenueValue({ summary, isLoading, color }) {
   const usd = parseFloat(summary.totalSalesUSD || 0);
   const ngn = parseFloat(summary.totalSalesNGN || 0);
   const fmtUSD = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(usd);
-  const fmtNGN = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(ngn);
+  const fmtNGN = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(ngn);
   if (!usd && !ngn) return <span>—</span>;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -67,25 +67,38 @@ export default function DashboardScreen() {
   const summary    = summaryRes?.data?.body?.dashboardSummary || {};
   const salesOverview = overviewRes?.data?.body?.dashboardSalesOverview || [];
 
-  const { chartData, dateRange } = useMemo(() => {
+  const { chartData, dateRange, chartCurrency } = useMemo(() => {
     if (!salesOverview.length) return { chartData: {}, dateRange: "" };
 
+    const parseLocalDate = (str) => {
+      // str is "YYYY-MM-DD", "YYYY-MM", or "YYYY-WW" — parse without timezone shift
+      const parts = str.split("-");
+      const year  = parseInt(parts[0], 10);
+      const month = parts[1] ? parseInt(parts[1], 10) - 1 : 0;
+      const day   = parts[2] ? parseInt(parts[2], 10) : 1;
+      return new Date(year, month, day);
+    };
+
     const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const first = new Date(salesOverview[0].period);
-    const last  = new Date(salesOverview[salesOverview.length - 1].period);
+    const first = parseLocalDate(salesOverview[0].period);
+    const last  = parseLocalDate(salesOverview[salesOverview.length - 1].period);
+
+    // Prefer NGN revenue for chart; fall back to USD if no NGN data exists
+    const hasNGN = salesOverview.some((item) => (item.totalSalesNGN || 0) > 0);
+    const getValue = (item) => hasNGN ? (item.totalSalesNGN || 0) : (item.totalSalesUSD || 0);
 
     const out = {};
     salesOverview.forEach((item) => {
-      const d = new Date(item.period);
+      const d = parseLocalDate(item.period);
       let label;
       if (period === "Daily")        label = d.toLocaleDateString("en-US", { weekday: "short" });
-      else if (period === "Weekly")  label = d.toLocaleDateString("en-US", { weekday: "short" });
-      else if (period === "Monthly") label = d.toLocaleDateString("en-US", { month: "short" });
-      else label = String(d.getFullYear());
-      out[label] = item.totalSales;
+      else if (period === "Weekly")  label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      else if (period === "Yearly")  label = d.toLocaleDateString("en-US", { month: "short" });
+      else                           label = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      out[label] = getValue(item);
     });
 
-    return { chartData: out, dateRange: `${fmt(first)} — ${fmt(last)}` };
+    return { chartData: out, dateRange: `${fmt(first)} — ${fmt(last)}`, chartCurrency: hasNGN ? "NGN" : "USD" };
   }, [salesOverview, period]);
 
   return (
@@ -154,7 +167,10 @@ export default function DashboardScreen() {
       <div className="chart__card">
         <div className="chart__header">
           <div>
-            <h3 className="chart__title">Sales Overview</h3>
+            <h3 className="chart__title">
+              Sales Overview
+              {chartCurrency && <span style={{ marginLeft: 8, fontSize: ".72rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: ".04em" }}>{chartCurrency}</span>}
+            </h3>
             {dateRange && <p className="chart__range">{dateRange}</p>}
           </div>
           <div className="period__tabs">
