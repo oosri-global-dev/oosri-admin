@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AreaChart } from "react-chartkick";
 import "chartkick/chart.js";
-import { useDashboardData } from "@/hooks/useDashboardData";
+import { useDashboardSummary, useDashboardOverview } from "@/hooks/useDashboardData";
 import OrdersTable from "@/components/screen-components/ordersTable";
 
 import { GoStack as ProductsIcon } from "react-icons/go";
@@ -55,13 +55,17 @@ function PlatformRevenueValue({ summary, isLoading, color }) {
   );
 }
 
+const PERIOD_API_MAP = { Daily: "daily", Weekly: "weekly", Monthly: "monthly", Yearly: "annually" };
+
 export default function DashboardScreen() {
   const [period, setPeriod] = useState("Daily");
 
-  const { data, isLoading } = useDashboardData(period.toLowerCase());
+  const { data: summaryRes, isLoading: summaryLoading } = useDashboardSummary();
+  const { data: overviewRes, isLoading: overviewLoading } = useDashboardOverview(PERIOD_API_MAP[period] || "daily");
 
-  const summary      = data?.overview?.data?.body?.dashboardSummary || {};
-  const salesOverview = data?.summary?.data?.body?.dashboardSalesOverview || [];
+  const isLoading  = summaryLoading;
+  const summary    = summaryRes?.data?.body?.dashboardSummary || {};
+  const salesOverview = overviewRes?.data?.body?.dashboardSalesOverview || [];
 
   const { chartData, dateRange } = useMemo(() => {
     if (!salesOverview.length) return { chartData: {}, dateRange: "" };
