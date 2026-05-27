@@ -127,7 +127,7 @@ export default function OrderDetails({ data, isLoading }) {
                     <p style={{ margin: 0, fontSize: '.84rem', fontWeight: 600, color: '#fc5353' }}>
                       {data?.currencyCode === 'USD'
                         ? (item?.formattedProductAmountUSD || '—')
-                        : (item?.formattedProductAmountNGN || item?.productAmount || '—')}
+                        : (item?.formattedProductAmountNGN || '—')}
                     </p>
                   </div>
                 </div>
@@ -149,11 +149,15 @@ export default function OrderDetails({ data, isLoading }) {
           <Card title="Order Summary">
             <InfoRow
               label="Subtotal"
-              value={data?.currencyCode === 'USD' ? data?.formattedAmountUSD : data?.formattedAmountNGN}
+              value={data?.currencyCode === 'USD'
+                ? (data?.formattedSubtotalUSD || data?.formattedAmountUSD || '—')
+                : (data?.formattedSubtotalNGN || data?.formattedAmountNGN || '—')}
             />
             <InfoRow
               label="Delivery Fee"
-              value={data?.formattedDeliveryFeeNGN || (data?.currencyCode === 'USD' ? '$0.00' : '₦0.00')}
+              value={data?.currencyCode === 'USD'
+                ? (data?.formattedDeliveryFeeUSD || '$0.00')
+                : (data?.formattedDeliveryFeeNGN || '₦0.00')}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, marginTop: 4 }}>
               <span style={{ fontSize: '.88rem', fontWeight: 700, color: '#111827' }}>Total</span>

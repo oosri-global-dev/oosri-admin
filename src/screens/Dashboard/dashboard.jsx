@@ -23,7 +23,7 @@ const KPI_DEFS = [
   { key: "totalSellers",      label: "Total Sellers",      icon: SellersIcon,  color: "#8b5cf6", bg: "#f5f3ff" },
   { key: "totalOrders",       label: "Total Orders",       icon: OrdersIcon,   color: "#f59e0b", bg: "#fffbeb" },
   { key: "totalProductsSold", label: "Products Sold",      icon: ProductsIcon, color: "#10b981", bg: "#ecfdf5" },
-  { key: "totalSales",        label: "Platform Revenue",   icon: RevenueIcon,  color: "#fc5353", bg: "#fff1f2" },
+  { key: "platformRevenue",   label: "Platform Revenue",   icon: RevenueIcon,  color: "#fc5353", bg: "#fff1f2", custom: true },
 ];
 
 // Pending action cards — each links to the relevant admin page
@@ -36,12 +36,23 @@ const PENDING_DEFS = [
 
 function formatValue(key, val) {
   if (val == null || val === "undefined") return "—";
-  if (key === "totalSales") {
-    const num = parseFloat(val);
-    return isNaN(num) ? val : `$${num.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
-  }
   const num = parseInt(val, 10);
   return isNaN(num) ? val : num.toLocaleString("en-US");
+}
+
+function PlatformRevenueValue({ summary, isLoading, color }) {
+  if (isLoading) return <span className="kpi__skeleton" />;
+  const usd = parseFloat(summary.totalSalesUSD || 0);
+  const ngn = parseFloat(summary.totalSalesNGN || 0);
+  const fmtUSD = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(usd);
+  const fmtNGN = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(ngn);
+  if (!usd && !ngn) return <span>—</span>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      {usd > 0 && <span style={{ fontSize: "1rem", fontWeight: 800, color }}>{fmtUSD}</span>}
+      {ngn > 0 && <span style={{ fontSize: "1rem", fontWeight: 800, color }}>{fmtNGN}</span>}
+    </div>
+  );
 }
 
 export default function DashboardScreen() {
@@ -78,7 +89,7 @@ export default function DashboardScreen() {
 
       {/* Overview KPI cards */}
       <div className="kpi__grid">
-        {KPI_DEFS.map(({ key, label, icon: Icon, color, bg }) => (
+        {KPI_DEFS.map(({ key, label, icon: Icon, color, bg, custom }) => (
           <div className="kpi__card" key={key}>
             <div className="kpi__icon" style={{ background: bg, color }}>
               <Icon size={20} />
@@ -86,7 +97,9 @@ export default function DashboardScreen() {
             <div className="kpi__body">
               <p className="kpi__label">{label}</p>
               <h2 className="kpi__value">
-                {isLoading ? <span className="kpi__skeleton" /> : formatValue(key, summary[key])}
+                {custom
+                  ? <PlatformRevenueValue summary={summary} isLoading={isLoading} color={color} />
+                  : (isLoading ? <span className="kpi__skeleton" /> : formatValue(key, summary[key]))}
               </h2>
             </div>
           </div>
