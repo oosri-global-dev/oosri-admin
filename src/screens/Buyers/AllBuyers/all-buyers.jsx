@@ -134,6 +134,12 @@ export default function AllBuyers() {
       render: (v) => v || <span style={{ color: "#9ca3af" }}>—</span>,
     },
     {
+      title: "Country",
+      dataIndex: "country",
+      key: "country",
+      render: (v) => v || <span style={{ color: "#9ca3af" }}>—</span>,
+    },
+    {
       title: "Status",
       key: "status",
       render: (_, row) => <StatusPill buyer={row} />,
