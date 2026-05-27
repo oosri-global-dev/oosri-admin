@@ -67,9 +67,9 @@ export default function DashboardScreen() {
   const summary    = summaryRes?.data?.body?.dashboardSummary || {};
   const salesOverview = overviewRes?.data?.body?.dashboardSalesOverview || [];
 
-  const { chartData, dateRange, totalOrders } = useMemo(() => {
+  const { chartData, dateRange, chartLabel } = useMemo(() => {
     const validOverview = salesOverview.filter((item) => item.period != null);
-    if (!validOverview.length) return { chartData: {}, dateRange: "", totalOrders: 0 };
+    if (!validOverview.length) return { chartData: {}, dateRange: "", chartLabel: "" };
 
     const parseLocalDate = (str) => {
       const parts = str.split("-");
@@ -83,6 +83,8 @@ export default function DashboardScreen() {
     const first = parseLocalDate(validOverview[0].period);
     const last  = parseLocalDate(validOverview[validOverview.length - 1].period);
 
+    const hasRevenue = validOverview.some((item) => (item.totalSales || 0) > 0);
+
     const out = {};
     validOverview.forEach((item) => {
       const d = parseLocalDate(item.period);
@@ -91,12 +93,14 @@ export default function DashboardScreen() {
       else if (period === "Weekly")  label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       else if (period === "Yearly")  label = d.toLocaleDateString("en-US", { month: "short" });
       else                           label = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-      out[label] = item.orderCount || 0;
+      out[label] = hasRevenue ? (item.totalSales || 0) : (item.orderCount || 0);
     });
 
-    const totalOrders = validOverview.reduce((s, item) => s + (item.orderCount || 0), 0);
-
-    return { chartData: out, dateRange: `${fmt(first)} — ${fmt(last)}`, totalOrders };
+    return {
+      chartData: out,
+      dateRange: `${fmt(first)} — ${fmt(last)}`,
+      chartLabel: hasRevenue ? "Platform Revenue" : "Orders",
+    };
   }, [salesOverview, period]);
 
   return (
@@ -166,10 +170,10 @@ export default function DashboardScreen() {
         <div className="chart__header">
           <div>
             <h3 className="chart__title">
-              Orders Overview
-              {totalOrders > 0 && (
-                <span style={{ marginLeft: 8, fontSize: ".72rem", fontWeight: 600, color: "#9ca3af", letterSpacing: ".04em" }}>
-                  {totalOrders.toLocaleString("en-US")} completed
+              Sales Overview
+              {chartLabel && (
+                <span style={{ marginLeft: 8, fontSize: ".72rem", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: ".04em" }}>
+                  {chartLabel}
                 </span>
               )}
             </h3>
@@ -190,7 +194,7 @@ export default function DashboardScreen() {
         <div className="chart__body">
           <AreaChart
             data={chartData}
-            empty={`No order data for the ${period.toLowerCase()} period`}
+            empty={`No sales data for the ${period.toLowerCase()} period`}
             colors={["#fc5353"]}
             curve={true}
             legend={false}
