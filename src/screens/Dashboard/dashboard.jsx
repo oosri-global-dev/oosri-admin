@@ -68,10 +68,10 @@ export default function DashboardScreen() {
   const salesOverview = overviewRes?.data?.body?.dashboardSalesOverview || [];
 
   const { chartData, dateRange, chartCurrency } = useMemo(() => {
-    if (!salesOverview.length) return { chartData: {}, dateRange: "" };
+    const validOverview = salesOverview.filter((item) => item.period != null);
+    if (!validOverview.length) return { chartData: {}, dateRange: "" };
 
     const parseLocalDate = (str) => {
-      // str is "YYYY-MM-DD", "YYYY-MM", or "YYYY-WW" — parse without timezone shift
       const parts = str.split("-");
       const year  = parseInt(parts[0], 10);
       const month = parts[1] ? parseInt(parts[1], 10) - 1 : 0;
@@ -80,15 +80,15 @@ export default function DashboardScreen() {
     };
 
     const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const first = parseLocalDate(salesOverview[0].period);
-    const last  = parseLocalDate(salesOverview[salesOverview.length - 1].period);
+    const first = parseLocalDate(validOverview[0].period);
+    const last  = parseLocalDate(validOverview[validOverview.length - 1].period);
 
     // Prefer NGN revenue for chart; fall back to USD if no NGN data exists
-    const hasNGN = salesOverview.some((item) => (item.totalSalesNGN || 0) > 0);
+    const hasNGN = validOverview.some((item) => (item.totalSalesNGN || 0) > 0);
     const getValue = (item) => hasNGN ? (item.totalSalesNGN || 0) : (item.totalSalesUSD || 0);
 
     const out = {};
-    salesOverview.forEach((item) => {
+    validOverview.forEach((item) => {
       const d = parseLocalDate(item.period);
       let label;
       if (period === "Daily")        label = d.toLocaleDateString("en-US", { weekday: "short" });
