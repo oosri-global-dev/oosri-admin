@@ -230,6 +230,27 @@ export default function AllProductsScreen() {
       ),
     },
     {
+      title: "Qty",
+      dataIndex: "inStock",
+      key: "qty",
+      align: "center",
+      render: (v) => {
+        const qty = v ?? 0;
+        const bg    = qty === 0 ? "#fee2e2" : qty === 1 ? "#fef9c3" : "#f1f5f9";
+        const color = qty === 0 ? "#dc2626" : qty === 1 ? "#a16207" : "#475569";
+        return (
+          <span style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            minWidth: 32, height: 28, padding: "0 8px",
+            background: bg, color, borderRadius: 6,
+            fontSize: ".82rem", fontWeight: 700,
+          }}>
+            {qty}
+          </span>
+        );
+      },
+    },
+    {
       title: "Status",
       dataIndex: "productStatus",
       key: "productStatus",
