@@ -1,8 +1,8 @@
 import { instance } from './axios';
 
-export const getSellers = async () => {
+export const getSellers = async (page = 1, limit = 10) => {
   try {
-    const data = await instance.get('/admin/sellers');
+    const data = await instance.get(`/admin/sellers?page=${page}&limit=${limit}`);
     return data;
   } catch (error) {
     console.error('Error fetching sellers:', error);

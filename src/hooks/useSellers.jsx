@@ -24,10 +24,10 @@ export const useSellers = (searchTerm = '', options = {}) => {
         do {
           const res = await getSellers(currentPage);
           const sellers = res.data?.body?.sellers || [];
-          const meta = res.data.meta || {};
+          const pagination = res.data?.body?.pagination || {};
 
           allSellers.push(...sellers);
-          totalPages = meta.totalPages || 1;
+          totalPages = pagination.totalPages || 1;
           currentPage++;
         } while (currentPage <= totalPages);
 
