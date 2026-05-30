@@ -16,3 +16,8 @@ export const updateProfileData = async (payload) => {
   const { data } = await instance.put(`/profile/admin/update-profile`, payload);
   return data;
 };
+
+export const updateAdminEmail = async (payload) => {
+  const { data } = await instance.put(`/profile/admin/update-email`, payload);
+  return data;
+};

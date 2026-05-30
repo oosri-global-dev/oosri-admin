@@ -1,8 +1,8 @@
 import { useState, useContext, useRef, useEffect } from 'react';
-import { Form, Input, Spin, message } from 'antd';
+import { Form, Input, Spin, message, Modal } from 'antd';
 import { MdCameraAlt, MdEdit, MdSave, MdClose, MdLock } from 'react-icons/md';
 import { MainContext } from '@/context';
-import { updateProfileData, UpdateProfilePicture } from '@/network/profile';
+import { updateProfileData, UpdateProfilePicture, updateAdminEmail } from '@/network/profile';
 import { handleFetchUser } from '@/network/user';
 import { CURRENT_USER } from '@/context/types';
 import useNotification from '@/hooks/useNotification';
@@ -39,15 +39,20 @@ const STATIC_STYLE = {
 };
 
 export default function AdminProfile() {
-  const [editMode, setEditMode]     = useState(false);
-  const [saving, setSaving]         = useState(false);
-  const [uploading, setUploading]   = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [pendingFile, setPendingFile] = useState(null);
+  const [editMode, setEditMode]         = useState(false);
+  const [saving, setSaving]             = useState(false);
+  const [uploading, setUploading]       = useState(false);
+  const [previewUrl, setPreviewUrl]     = useState(null);
+  const [pendingFile, setPendingFile]   = useState(null);
+  const [emailModal, setEmailModal]     = useState(false);
+  const [emailSaving, setEmailSaving]   = useState(false);
   const fileInputRef = useRef(null);
   const [success, error] = useNotification();
   const { state: { user }, dispatch } = useContext(MainContext);
   const [form] = Form.useForm();
+  const [emailForm] = Form.useForm();
+
+  const isSuperAdmin = user?.userRoles === 'super_admin';
 
   useEffect(() => {
     handleFetchUser()
@@ -124,6 +129,24 @@ export default function AdminProfile() {
     setPendingFile(null);
     setPreviewUrl(null);
     form.setFieldsValue({ fullName: user?.fullName || '', phoneNumber: user?.phoneNumber || '' });
+  };
+
+  const handleEmailChange = async () => {
+    let values;
+    try { values = await emailForm.validateFields(); } catch { return; }
+    setEmailSaving(true);
+    try {
+      await updateAdminEmail({ newEmail: values.newEmail, password: values.password });
+      const fresh = await handleFetchUser();
+      dispatch({ type: CURRENT_USER, payload: { ...fresh?.data?.body?.user } });
+      success('Email address updated successfully.');
+      setEmailModal(false);
+      emailForm.resetFields();
+    } catch (err) {
+      error(err?.response?.data?.message || 'Failed to update email.');
+    } finally {
+      setEmailSaving(false);
+    }
   };
 
   const avatarSrc = previewUrl || user?.profileImage;
@@ -222,7 +245,16 @@ export default function AdminProfile() {
             <FieldRow label="Email Address">
               <div style={{ ...STATIC_STYLE, justifyContent: 'space-between' }}>
                 <span>{user?.email || '—'}</span>
-                <MdLock size={14} color="#9ca3af" title="Email cannot be changed" />
+                {isSuperAdmin ? (
+                  <button
+                    onClick={() => { emailForm.resetFields(); setEmailModal(true); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--oosriPrimary)', fontSize: '.78rem', fontWeight: 600, padding: 0, fontFamily: 'inherit' }}
+                  >
+                    Change
+                  </button>
+                ) : (
+                  <MdLock size={14} color="#9ca3af" title="Email cannot be changed" />
+                )}
               </div>
             </FieldRow>
 
@@ -243,13 +275,51 @@ export default function AdminProfile() {
         </InfoCard>
       </Form>
 
-      {/* Security note */}
-      <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '14px 20px', display: 'flex', gap: 10 }}>
-        <span style={{ fontSize: '1rem', flexShrink: 0 }}>🔒</span>
-        <p style={{ margin: 0, fontSize: '.82rem', color: '#92400e', lineHeight: 1.55 }}>
-          Your email address cannot be changed here. Contact platform support if you need to update it.
+      {/* Security note — only for non-super-admin */}
+      {!isSuperAdmin && (
+        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '14px 20px', display: 'flex', gap: 10 }}>
+          <span style={{ fontSize: '1rem', flexShrink: 0 }}>🔒</span>
+          <p style={{ margin: 0, fontSize: '.82rem', color: '#92400e', lineHeight: 1.55 }}>
+            Your email address cannot be changed here. Contact platform support if you need to update it.
+          </p>
+        </div>
+      )}
+
+      {/* Email change modal — super_admin only */}
+      <Modal
+        title="Change Email Address"
+        open={emailModal}
+        onCancel={() => { setEmailModal(false); emailForm.resetFields(); }}
+        onOk={handleEmailChange}
+        okText={emailSaving ? 'Saving…' : 'Update Email'}
+        okButtonProps={{ disabled: emailSaving, style: { background: 'var(--oosriPrimary)', borderColor: 'var(--oosriPrimary)' } }}
+        cancelButtonProps={{ disabled: emailSaving }}
+        destroyOnClose
+      >
+        <p style={{ margin: '0 0 16px', fontSize: '.84rem', color: '#6b7280' }}>
+          Enter your new email address and confirm your current password to proceed.
         </p>
-      </div>
+        <Form form={emailForm} layout="vertical">
+          <Form.Item
+            name="newEmail"
+            label="New Email Address"
+            rules={[
+              { required: true, message: 'Please enter a new email address.' },
+              { type: 'email', message: 'Please enter a valid email address.' },
+            ]}
+          >
+            <Input placeholder="new@oosri.com" style={{ height: 40 }} />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="Current Password"
+            rules={[{ required: true, message: 'Please confirm your current password.' }]}
+            style={{ marginBottom: 0 }}
+          >
+            <Input.Password placeholder="Enter your password" style={{ height: 40 }} />
+          </Form.Item>
+        </Form>
+      </Modal>
 
     </div>
   );
