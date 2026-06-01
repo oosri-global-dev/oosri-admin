@@ -140,12 +140,19 @@ export default function AllSellers() {
       render: (_, s) => (
         <div className="seller__cell">
           <div className="avatar">{initials(s.firstName, s.lastName)}</div>
-          <div>
-            <p className="name">{s.firstName} {s.lastName}</p>
-            <p className="email">{s.email}</p>
-          </div>
+          <p className="name">{s.firstName} {s.lastName}</p>
         </div>
       ),
+    },
+    {
+      title: "Email",
+      key: "email",
+      render: (_, s) => <span style={{ fontSize: '.82rem', color: '#374151' }}>{s.email || "—"}</span>,
+    },
+    {
+      title: "Phone",
+      key: "phone",
+      render: (_, s) => <span style={{ fontSize: '.82rem', color: '#374151' }}>{s.phone_number || "—"}</span>,
     },
     {
       title: "Country",

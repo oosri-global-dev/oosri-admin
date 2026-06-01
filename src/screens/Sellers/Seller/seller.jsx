@@ -249,7 +249,7 @@ export default function Seller({ sellerId }) {
 
   const personal = {
     firstName: d.firstName, lastName: d.lastName, email: d.email,
-    country: d.country, phoneNumber: d.phoneNumber,
+    country: d.country, phoneNumber: d.phone_number,
     joinDate: d.createdAt, dob: d.personalBusinessAccount?.dateOfBirth,
     isVerified: d.isVerified, profilePicture: d.profilePicture,
     residentialAddress: d.personalBusinessAccount?.residentialAddress,
@@ -283,7 +283,10 @@ export default function Seller({ sellerId }) {
           <h2 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 700, color: '#111827' }}>
             {`${d.firstName || ''} ${d.lastName || ''}`.trim() || '—'}
           </h2>
-          <p style={{ margin: 0, fontSize: '.82rem', color: '#6b7280' }}>{d.email}</p>
+          <p style={{ margin: '0 0 2px', fontSize: '.82rem', color: '#6b7280' }}>{d.email || '—'}</p>
+          {d.phone_number && (
+            <p style={{ margin: 0, fontSize: '.82rem', color: '#6b7280' }}>{d.phone_number}</p>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {d.isSuspended && (
