@@ -154,7 +154,7 @@ export default function ProductDetailsView({ data, onEdit, onApprove, onReject, 
           <Card title="Pricing">
             <div style={{ paddingTop: 8 }}>
               {(() => {
-                const price = data.salesPrice && data.salesPrice !== data.regularPrice ? data.salesPrice : data.regularPrice;
+                const price = data.regularPrice;
                 const usd = price ? (price / rate).toFixed(2) : null;
                 return (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
