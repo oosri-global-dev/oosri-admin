@@ -8,9 +8,10 @@ export const SaleAnalyticsWrapper = styled.div`
   /* ── KPI row ─────────────────────── */
   .kpi__row {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
-    @media (max-width: 640px) { grid-template-columns: 1fr; }
+    @media (max-width: 860px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 560px) { grid-template-columns: 1fr; }
   }
 
   .kpi__card {
@@ -29,6 +30,7 @@ export const SaleAnalyticsWrapper = styled.div`
 
     .kpi__label { font-size: .8rem; color: #6b7280; font-weight: 500; margin: 0 0 4px; }
     .kpi__value { font-size: 1.5rem; font-weight: 700; color: #111827; margin: 0; }
+    .kpi__sub   { font-size: .74rem; color: #9ca3af; font-weight: 500; margin: 4px 0 0; }
   }
 
   /* ── chart card ──────────────────── */

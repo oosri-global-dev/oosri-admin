@@ -39,11 +39,11 @@ export default function SaleAnalytics() {
   const analytics        = data?.salesAnalytics?.data?.body || {};
   const productAnalytics = data?.productAnalytics?.data?.body || {};
 
-  const monthlyEarnings = analytics?.monthlyEarnings || {};
-  const salesLabels = Object.keys(monthlyEarnings).map(
-    (k) => k.charAt(0).toUpperCase() + k.slice(1)
-  );
-  const salesData = Object.values(monthlyEarnings);
+  const monthlyNGN = analytics?.monthlyEarningsNGN || {};
+  const monthlyUSD = analytics?.monthlyEarningsUSD || {};
+  const salesLabels   = Object.keys(monthlyNGN).map((k) => k.charAt(0).toUpperCase() + k.slice(1));
+  const salesDataNGN  = Object.values(monthlyNGN);
+  const salesDataUSD  = Object.values(monthlyUSD);
 
   const mostPurchased  = productAnalytics?.mostPurchasedProduct  || {};
   const leastPurchased = productAnalytics?.leastPurchasedProduct || {};
@@ -67,8 +67,19 @@ export default function SaleAnalytics() {
             <StackIcon size={22} />
           </div>
           <div>
-            <p className="kpi__label">Total Sales</p>
-            <h2 className="kpi__value">{formatCurrency(analytics?.totalEarnings) || "—"}</h2>
+            <p className="kpi__label">Total Sales (NGN)</p>
+            <h2 className="kpi__value">{formatCurrency(analytics?.totalEarningsNGN, 'NGN') || "—"}</h2>
+            <p className="kpi__sub">This week: {formatCurrency(analytics?.weeklyEarningsNGN, 'NGN') || "₦0.00"}</p>
+          </div>
+        </div>
+        <div className="kpi__card">
+          <div className="kpi__icon" style={{ background: "#f0fdf4", color: "#16a34a" }}>
+            <StackIcon size={22} />
+          </div>
+          <div>
+            <p className="kpi__label">Total Sales (USD)</p>
+            <h2 className="kpi__value">{formatCurrency(analytics?.totalEarningsUSD, 'USD') || "—"}</h2>
+            <p className="kpi__sub">This week: {formatCurrency(analytics?.weeklyEarningsUSD, 'USD') || "$0.00"}</p>
           </div>
         </div>
         <div className="kpi__card">
@@ -94,7 +105,7 @@ export default function SaleAnalytics() {
           />
         </div>
         <div className="chart__body">
-          <SalesChart labels={salesLabels} data={salesData} />
+          <SalesChart labels={salesLabels} dataNGN={salesDataNGN} dataUSD={salesDataUSD} />
         </div>
       </div>
 
