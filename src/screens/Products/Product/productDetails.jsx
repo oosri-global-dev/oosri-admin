@@ -94,7 +94,7 @@ function ApprovalBadge({ status }) {
 
 export default function ProductDetailsView({ data, onEdit, onApprove, onReject, approving, rejecting }) {
   const { data: fxData } = useFxRate();
-  const rate = fxData?.body?.usdToNgnRate || DEFAULT_RATE;
+  const rate = fxData?.body?.usdToNgnRate || 1355;
 
   if (!data) return null;
 
