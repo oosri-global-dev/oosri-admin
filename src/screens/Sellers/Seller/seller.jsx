@@ -176,7 +176,7 @@ function ProductsTab({ sellerId }) {
       key: 'action',
       width: 60,
       render: (_, p) => (
-        <Link href={`/product/${p.id}`} style={{ fontSize: '.78rem', color: 'var(--oosriPrimary)', fontWeight: 600, textDecoration: 'none' }}>
+        <Link href={`/product/${p._id}`} style={{ fontSize: '.78rem', color: 'var(--oosriPrimary)', fontWeight: 600, textDecoration: 'none' }}>
           View
         </Link>
       ),
@@ -187,7 +187,7 @@ function ProductsTab({ sellerId }) {
 
   return (
     <Table
-      rowKey="id"
+      rowKey="_id"
       columns={columns}
       dataSource={products}
       pagination={{ pageSize: 10, showSizeChanger: false }}
